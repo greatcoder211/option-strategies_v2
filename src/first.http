@@ -1,0 +1,230 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+###
+POST http://localhost:8080/first
+Content-Type: application/json
+
+{
+  "spotPrice": 150.0,
+  "volatility": 0.3,
+  "riskFreeRate": 0.05,
+  "timeToExpiry": 0.08,
+  "legs": [
+    {
+      "strikePrice": 140.0,
+      "type": "CALL",
+      "belfort": "BUY"
+    },
+    {
+      "strikePrice": 160.0,
+      "type": "CALL",
+      "belfort": "SELL"
+    }
+  ]
+}
+
+
+### Apple- correct ticker
+GET http://localhost:8080/companies?key=aapl
+
+### Microsoft- correct ticker
+GET http://localhost:8080/companies?key=microsoft
+
+### Test błędu (zły ticker - powinien wyrzucić Twój wyjątek)
+GET http://localhost:8080/companies?key=aaabbbajsk
+
+### Test błędu (ticker too short- only one character)
+GET http://localhost:8080/companies?key=x
+
+### Key to test = to jest test
+GET http://localhost:8080/companies?key=test
+
+### Should work
+GET http://localhost:8080/companies?key=apple
+
+### Also should work
+GET http://localhost:8080/companies?key=msft
+
+### POST first try on new Spring cleaning
+POST http://localhost:8080/strategy/BUY/butterfly_spread/1/apple/CALL?selection=4
+Content-Type: application/json
+
+{
+    "spreads": [5.0, 10.0],
+    "expiry": "16-05-2026"
+}
+
+### POST first try on new MongoDB training
+POST http://localhost:8080/portfolio?key=apple&choice=2
+Content-Type: application/json
+
+{
+    "typeID": ".IronCondor",
+    "ls": "SELL",
+    "type": "NA",
+    "spreads": [5.0, 10.0]
+}
+
+### POST another save
+POST http://localhost:8080/portfolio?key=microsoft&choice=2
+Content-Type: application/json
+
+{
+    "typeID": ".RatioSpread",
+    "ls": "BUY",
+    "type": "CALL",
+    "spreads": [6.0,8.0]
+}
+
+### first getter correctness check- all wallets
+GET http://localhost:8080/portfolio
+
+### first getter specific wallet check
+GET http://localhost:8080/portfolio/699d83d5c0f6114465743a17
+
+### first delete try
+DELETE http://localhost:8080/portfolio/699d871787bb164b520041e2
+
+### aggregate second try learning rollin ballin
+GET http://localhost:8080/mongodb/train/TSLA.TRT
+
+
+### rentier
+GET http://localhost:8080/mongodb/rentier
+
+
+### first user add
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+    "username": "Rentier123",
+    "email": "blazejfran4@gmail.com"
+}
+
+### new user adding
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "Camping1",
+  "email": "info@campingpark-rerik.de"
+}
+### antek 69a1eb2dd20734756eee9f80
+### camping 69a1ed87b609dd5f4a4bb2a4
+
+### first wallet with user ID
+POST http://localhost:8080/portfolio?userID=699da4cca7f8d723b2892e10&key=apple&choice=1
+Content-Type: application/json
+
+{
+    "typeID": ".IronButterfly",
+    "ls": "SELL",
+    "spreads": [5.0]
+}
+
+### find Maciej wallets
+GET http://localhost:8080/portfolio/user/6699da4cca7f8d723b2892e10
+
+### first mongodb service aggregation try
+GET http://localhost:8080/mongodb/699da4cca7f8d723b2892e10
+
+###
+GET http://localhost:8080/users/getall
+
+### --- ANTEK FRA35 (69a1eb2dd20734756eee9f80) ---
+
+### execute
+POST http://localhost:8080/execute
+Content-Type: application/json
+
+{
+  "quant": 1,
+  "strategy": {
+    "typeID": ".IronCondor",
+    "ls": "SELL"
+  },
+  "ticker": "NVDA",
+  "spreads": [5.0, 15.0],
+  "expiry": "31-10-2026",
+  "userID": "69a1ec8355b6606e67bf5682"
+}
+
+### sprawdzamy strategie uzytkownika
+GET http://localhost:8080/portfolio/69a1ec8355b6606e67bf5682
+
+### 1. Logowanie (robisz to raz, żeby dostać bilet)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "rentier123",
+  "password": "Haslomaslociasto600"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+
+### 2. Pobranie danych (tutaj okazujesz bilet!)
+GET http://localhost:8080/portfolio/user/6699da4cca7f8d723b2892e10
+Authorization: Bearer {{auth_token}}
+
+### real correct kolejnosc nwm jak po angielsku
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "rentier123",
+  "email": "blazejfran44@gmail.com",
+  "password": "Haslomaslociasto600"
+}
+> {% client.global.set("auth_token", response.body.token); %}
+
+### 2. Logowanie (To tutaj dostajesz bilet JWT!)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "rentier123",
+  "password": "Haslomaslociasto600"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+### real correct
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "MobbynSquad",
+  "email": "zlotystrzal@gmail.com",
+  "password": "ToZlotyStrzalUhqqow"
+}
+
+### 2. logowanie real
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "MobbynSquad",
+  "password": "ToZlotyStrzalUhqqow"
+}
+> {% client.global.set("auth_token", response.body.token); %}
+###  "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJNb2JieW5TcXVhZCIsImlhdCI6MTc3MjgxOTQ4MSwiZXhwIjoxNzcyOTA1ODgxfQ.buelvngUcCNEJwSnyYpGUDXQAfhYu_IZ9n9f87EoTQh2KpixA2OzkYk6PlQp0Q_teclNTV19zAHD3cmnHzq-Xg"
+### 3. Pobranie listy (Teraz zmienna będzie uzupełniona)
+GET http://localhost:8080/api/auth/api/users
+Authorization: Bearer {{auth_token}}
+### another get
+GET http://localhost:8080/api/auth/api/users
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJNb2JieW5TcXVhZCIsImlhdCI6MTc3MjgxOTQ4MSwiZXhwIjoxNzcyOTA1ODgxfQ.buelvngUcCNEJwSnyYpGUDXQAfhYu_IZ9n9f87EoTQh2KpixA2OzkYk6PlQp0Q_teclNTV19zAHD3cmnHzq-Xg
+### and another get
+GET http://localhost:8080/api/user/MobbynSquad
+### Pobranie po nazwie (Złoty Strzał)
+GET http://localhost:8080/api/user/username/MobbynSquad
+Authorization: Bearer {{auth_token}}
+
+### Pobranie po ID (Przykładowe ID z Twoich logów)
+GET http://localhost:8080/api/user/id/69ab0d29e6efa034f2511912
+Authorization: Bearer {{auth_token}}

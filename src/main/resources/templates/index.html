@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Belfort Strategy Lab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .chart-container { min-height: 500px; position: relative; width: 100%; }
+        .invalid-feedback { display: none; color: #dc3545; font-weight: 500; }
+        .is-invalid ~ .invalid-feedback { display: block; }
+        .is-invalid { border-color: #dc3545 !important; }
+        select:disabled { background-color: #e9ecef !important; cursor: not-allowed; color: #6c757d; }
+        .spread-label { font-size: 0.85rem; color: #6c757d; font-weight: 500; display: block; }
+    </style>
+</head>
+<body class="bg-light" onload="init()">
+
+<div class="container-fluid py-4">
+    <div class="row px-3">
+        <div class="col-md-3">
+            <div class="card p-4">
+                <h4 class="mb-4 fw-bold text-primary">Strategy Config</h4>
+
+                <div class="mb-3">
+                    <label for="keyInput" class="form-label fw-semibold">Company Search</label>
+                    <input type="text" id="keyInput" class="form-control" list="tickerOptions"
+                           placeholder="Type e.g. 'apple'..." oninput="handleSearch(this.value)">
+                    <datalist id="tickerOptions"></datalist>
+                </div>
+
+                <div class="mb-3">
+                    <label for="type" class="form-label fw-semibold">Strategy Type</label>
+                    <select id="type" class="form-select" onchange="updateStrategyUI()">
+                        <option value="butterfly_spread">Butterfly Spread</option>
+                        <option value="vertical_spread">Vertical Spread</option>
+                        <option value="iron_condor">Iron Condor</option>
+                        <option value="iron_butterfly">Iron Butterfly</option>
+                        <option value="strangle">Strangle</option>
+                        <option value="ratio_spread">Ratio Spread</option>
+                    </select>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="pos" class="form-label fw-semibold">Direction</label>
+                        <select id="pos" class="form-select">
+                            <option value="BUY">BUY</option>
+                            <option value="SELL">SELL</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label for="optionType" class="form-label fw-semibold">Option Type</label>
+                        <select id="optionType" class="form-select">
+                            <option value="CALL">CALL</option>
+                            <option value="PUT">PUT</option>
+                            <option id="naOption" value="NA" style="display:none;">NA</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="quant" class="form-label fw-semibold">Quantity</label>
+                    <input type="text" id="quant" class="form-control" value="1">
+                </div>
+
+                <div id="spreads-section" class="mb-3">
+                    <div class="form-label fw-semibold">Spreads Configuration</div>
+                    <div id="spread-inputs-wrapper" class="row g-2"></div>
+                    <div id="spreads-global-error" class="text-danger mt-1 fw-bold" style="display:none; font-size: 0.85rem;">
+                        Invalid spreads. Only positive values.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="expiry" class="form-label fw-semibold">Expiration Date</label>
+                    <input type="date" id="expiry" class="form-control" value="2026-05-16">
+                </div>
+
+                <button onclick="calculate()" class="btn btn-primary w-100 fw-bold py-2">Calculate Strategy</button>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card p-4 h-100">
+                <h2 id="strategy-title" class="text-center mb-4">Interactive Analysis</h2>
+                <div class="chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+    let lastSearchKey = "";
+
+    function init() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('expiry').setAttribute('min', today);
+        updateStrategyUI();
+    }
+
+    async function updateStrategyUI() {
+        const strategyType = document.getElementById('type').value;
+        const optSelect = document.getElementById('optionType');
+        const naOption = document.getElementById('naOption');
+        const wrapper = document.getElementById('spread-inputs-wrapper');
+
+        // Reguły lokalne (fallback jeśli metadane nie odpowiedzą)
+        let isCP = !strategyType.includes("iron") && !strategyType.includes("strangle");
+        let spreadCount = (strategyType.includes("iron") || strategyType.includes("butterfly")) ? 2 : 1;
+
+        try {
+            const res = await fetch(`/api/strategy-metadata/${strategyType}`);
+            if (res.ok) {
+                const meta = await res.json();
+                isCP = (meta.isCP !== undefined) ? meta.isCP : meta.cp;
+                spreadCount = meta.spreadNumber;
+            }
+        } catch (e) { console.warn("Using local UI rules."); }
+
+        if (!isCP) {
+            naOption.style.display = "block";
+            optSelect.value = "NA";
+            optSelect.disabled = true;
+        } else {
+            naOption.style.display = "none";
+            if (optSelect.value === "NA") optSelect.value = "CALL";
+            optSelect.disabled = false;
+        }
+
+        // Generowanie pól z ID i Label (Naprawa zdjęć c71a3c/c71a90)
+        wrapper.innerHTML = "";
+        const labels = ["First spread:", "Second spread:"];
+        for (let i = 0; i < spreadCount; i++) {
+            const col = document.createElement('div');
+            col.className = spreadCount > 1 ? "col-6" : "col-12";
+            col.innerHTML = `
+                <label for="spread-${i}" class="spread-label mb-1">${labels[i]}</label>
+                <input id="spread-${i}" type="text" class="form-control spread-input" value="${(i + 1) * 5}">
+            `;
+            wrapper.appendChild(col);
+        }
+    }
+
+    function handleSearch(val) {
+        if (val.length < 3) return;
+        lastSearchKey = val;
+        // Ważne: usuń ukośnik w @GetMapping w Javie
+        fetch(`/api/tickers?key=${encodeURIComponent(val)}`)
+            .then(res => res.ok ? res.json() : [])
+            .then(data => {
+                const list = document.getElementById('tickerOptions');
+                list.innerHTML = "";
+                (data || []).forEach(item => {
+                    let option = document.createElement('option');
+                    option.value = item;
+                    list.appendChild(option);
+                });
+            }).catch(e => console.error("Search failed:", e));
+    }
+
+    async function calculate() {
+        // Resetowanie błędów
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.getElementById('spreads-global-error').style.display = 'none';
+
+        const fullSelection = document.getElementById('keyInput').value;
+        const quant = parseInt(document.getElementById('quant').value);
+        const spreads = Array.from(document.querySelectorAll('.spread-input')).map(i => parseFloat(i.value.trim()));
+
+        // EKSTRAKCJA TICKERA (np. AAPL) - Zapobiega 404 w URL
+        let tickerOnly = "NONE";
+        const match = fullSelection.match(/\(([^)]+)\)$/);
+        if (match) {
+            tickerOnly = match[1];
+        } else {
+            tickerOnly = lastSearchKey || "NONE";
+        }
+
+        const dateParts = document.getElementById('expiry').value.split("-");
+        const expiryFormatted = (dateParts.length === 3) ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : "";
+
+        // Czysty URL bez spacji i nawiasów
+        const url = `/strategy/${document.getElementById('pos').value}/${document.getElementById('type').value}/${quant}/${encodeURIComponent(tickerOnly)}/${document.getElementById('optionType').value}?selection=${encodeURIComponent(fullSelection)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ spreads: spreads, expiry: expiryFormatted })
+            });
+
+            const data = await response.json();
+            console.log("Response from server:", data); // Debug w konsoli
+
+            if (!response.ok) {
+                console.error("Server Error:", data);
+                return;
+            }
+
+            document.getElementById('strategy-title').innerText = data.strategyName;
+            drawChart(data.chartPoints);
+        } catch (err) { console.error("Calculation failed:", err); }
+    }
+
+    function drawChart(pointsData) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        // Mapowanie pól 'price' i 'profit' na 'x' i 'y' dla Chart.js
+        const mappedData = (pointsData || []).map(p => ({
+            x: p.price,
+            y: p.profit
+        }));
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'P/L ($)',
+                    data: mappedData,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Stock Price' } },
+                    y: { grid: { color: (c) => c.tick.value === 0 ? '#000' : '#ddd', lineWidth: (c) => c.tick.value === 0 ? 2 : 1 } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
