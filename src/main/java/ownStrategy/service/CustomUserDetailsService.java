@@ -10,7 +10,6 @@ import ownStrategy.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepo;
-
     public CustomUserDetailsService(UserRepository userRepo) {
         this.userRepo = userRepo;
     }

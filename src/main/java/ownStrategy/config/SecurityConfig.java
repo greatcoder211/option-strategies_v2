@@ -12,48 +12,35 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ownStrategy.security.JwtRequestFilter;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
 
-    // // Wstrzykiwanie naszego Strażnika przez konstruktor
     public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
         this.jwtRequestFilter = jwtRequestFilter;
     }
 
+    //plac budowy HttpSecurity to wujek Michał, kolejne czesci streama to wytyczne ogolne(nie ruszac piwnicy), filtry(pracownicy, majstry) same się dobiorą i skonfigurują na koniec- patrz notatki, tam jest to ladnie gdzies
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Wyłączamy CSRF, bo używamy JWT (bezstanowość)
                 .csrf(csrf -> csrf.disable())
-
-                // 2. Ustalamy zasady dostępu do ścieżek
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Drzwi otwarte dla logowania
-                        .anyRequest().authenticated() // Reszta wymaga biletu (JWT)
+                        .requestMatchers("/api/auth/**").permitAll()
+                       .anyRequest().authenticated()
                 )
-
-                // 3. Wyłączamy sesje - każdy request musi być niezależny i mieć token
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // 4. KLUCZ: Wpinamy naszego Strażnika przed standardowy filtr logowania
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
-
-    // // Definicja Szefa (AuthenticationManager)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-    // // Definicja Maszynki do Mięsa (PasswordEncoder)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

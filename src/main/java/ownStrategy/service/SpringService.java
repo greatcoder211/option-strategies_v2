@@ -1,16 +1,13 @@
 package ownStrategy.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.exceptions.QuantityException;
 import ownStrategy.exceptions.SpreadException;
-import ownStrategy.legacy.console.Chart;
+import ownStrategy.logic.finance.Chart;
 import ownStrategy.logic.network.AlphaVantageStock;
-import ownStrategy.logic.network.SimpleHttpServer;
 import ownStrategy.logic.sPattern.*;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.stream.Collectors;
 

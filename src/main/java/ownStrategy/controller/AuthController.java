@@ -29,7 +29,6 @@ public class AuthController {
     private final UserRepository userRepo;
     private final PasswordEncoder encoder;
 
-    // // Konstruktor do wstrzykiwania zależności
     public AuthController(AuthenticationManager authenticationManager,
                           CustomUserDetailsService userDetailsService,
                           JwtUtils jwtUtils, UserRepository userRepo, PasswordEncoder encoder) {
@@ -42,39 +41,28 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-        // // 1. Uwierzytelnianie
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
                         loginRequest.getPassword()
                 )
         );
-
-        // // 2. Pobranie danych i generowanie tokena
         final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
         final String jwt = jwtUtils.generateToken(userDetails);
-
-        // // 3. Odpowiedź z tokenem opakowanym w obiekt
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        // // 1. Sprawdź, czy użytkownik już nie istnieje (fundament security)
         if (userRepo.findByUsername(registerRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: Username is already taken!");
         }
-
-        // // 2. Mapowanie na model User (pamiętaj o polu password w klasie User!)
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
-
-        // // 3. KLUCZ: Szyfrowanie hasła przed zapisem do bazy
         user.setPassword(encoder.encode(registerRequest.getPassword()));
-
         userRepo.save(user);
-
-        return ResponseEntity.ok("User registered successfully!");
+        final String jwt = jwtUtils.generateToken(user);
+        return ResponseEntity.ok(new AuthResponse(jwt));
     }
     @GetMapping("/api/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {

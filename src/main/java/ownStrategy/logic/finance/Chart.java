@@ -1,7 +1,6 @@
-package ownStrategy.legacy.console;
+package ownStrategy.logic.finance;
 
 import ownStrategy.dto.ChartPoint;
-import ownStrategy.logic.finance.OptionCalculator;
 import ownStrategy.logic.sPattern.OptionLeg;
 import ownStrategy.logic.sPattern.OptionStrategy;
 

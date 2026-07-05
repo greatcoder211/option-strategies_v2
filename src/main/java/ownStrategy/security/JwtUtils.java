@@ -10,7 +10,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
-
 @Component
 public class JwtUtils {
     // // Pobieramy wartości z mostu konfiguracyjnego (application.properties / Env Vars)
@@ -18,12 +17,12 @@ public class JwtUtils {
     private String secret;
     @Value("${jwt.expiration}")
     private long expiration;
-    // // CZĘŚĆ 1: Przygotowanie matematycznej matrycy (SecretKey)
+    //SecretKey- specjalny, bezpieczny obiekt klasy, która sprawdza, czy dane są bezpieczne, czy zostały przemielone odpowiednim algorytmem hashowania i coś tam jeszcze
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(secretBytes);
     }
-    // // CZĘŚĆ 2: Drukarka - tworzenie nowego biletu (tokena)
+    //tworzenie tokena
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
                 .subject(userDetails.getUsername()) // // Wpisujemy "kto to jest" (Subject)

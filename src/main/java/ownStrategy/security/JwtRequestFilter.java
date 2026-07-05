@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -24,7 +25,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
         this.jwtUtils = jwtUtils;
     }
-
+//ta metoda jest najwazniejsza i ona definiuje tę klasę- przechwytuje request, naszą odpowiedz(nasze pasy) i zestaw filtrow, robi tez uzytek z klasy pomocniczej JwtUtils
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -52,13 +53,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 // Wkładamy "kartę dostępu" do schowka Springa
+                //SecurityContextHolder -> SecurityContext, który ustawia Authentication -> UsernamePasswordAuthenticationToken extends AbstractAuthenticationToken implements Authentication
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-
-        // 5. Puszczamy zapytanie dalej przez kolejkę filtrów
+        //  Dostęp: Filtry "pod maską" mają dostęp do tej informacji, bo korzystają z tej samej klasy SecurityContextHolder, która "patrzy" w to samo miejsce w pamięci (ThreadLocal).
         filterChain.doFilter(request, response);
     }
 }

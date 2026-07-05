@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.Update;
 
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,7 @@ import ownStrategy.exceptions.APILimitExceededException;
 import ownStrategy.exceptions.OptionTypeException;
 import ownStrategy.exceptions.QuantityException;
 import ownStrategy.exceptions.SpreadException;
-import ownStrategy.legacy.console.Chart;
+import ownStrategy.logic.finance.Chart;
 import ownStrategy.logic.WalletFilter;
 import ownStrategy.logic.finance.OptionCalculator;
 import ownStrategy.logic.network.AlphaVantageStock;
@@ -40,12 +39,12 @@ import java.util.Optional;
 
 @Service
 public class OptionService {
-    private final StrategyRepository repo;
+    private final StrategyRepository strategyRepo;
     private final UserRepository userRepo;
     private final MongoTemplate mongoTemplate;
     private final WalletFilter walletFilter;
-    public OptionService(StrategyRepository repo, UserRepository userRepo, MongoTemplate mongoTemplate, WalletFilter walletFilter) {
-        this.repo = repo;
+    public OptionService(StrategyRepository strategyRepo, UserRepository userRepo, MongoTemplate mongoTemplate, WalletFilter walletFilter) {
+        this.strategyRepo = strategyRepo;
         this.userRepo = userRepo;
         this.mongoTemplate = mongoTemplate;
         this.walletFilter = walletFilter;
@@ -139,19 +138,19 @@ public class OptionService {
         }
     }
     public List<TheWallet> getAllTheseWallets(){
-        return repo.findAll();
+        return strategyRepo.findAll();
     }
 
     public void cleanUp(String id) {
-        Optional<TheWallet> wallet = repo.findById(id);
+        Optional<TheWallet> wallet = strategyRepo.findById(id);
         if(wallet.isPresent()){
-            repo.delete(wallet.get());
+            strategyRepo.delete(wallet.get());
         }
     }
 
     public Optional<TheWallet> getWallet(String id){
-        if(repo.findById(id).isPresent()){
-            return repo.findById(id);
+        if(strategyRepo.findById(id).isPresent()){
+            return strategyRepo.findById(id);
         }
         return Optional.empty();
     }
@@ -159,7 +158,7 @@ public class OptionService {
     public void saveToRepo(TheWallet wallet) {
         wallet.setDate(LocalDateTime.now());
         wallet.setStatus(Status.OPEN);
-        repo.save(wallet);
+        strategyRepo.save(wallet);
     }
 
     public void checkUser(String UserId, TheWallet wallet) {
@@ -187,7 +186,7 @@ public class OptionService {
 
     public List<TheWallet> getTheWallets(String UserId) {
         if(userRepo.findById(UserId).isPresent()){
-            return repo.findByUserID(UserId);
+            return strategyRepo.findByUserID(UserId);
         }
         else
             throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + UserId);
@@ -212,11 +211,11 @@ public class OptionService {
 
     @Transactional
     public void closePosition() {
-        List<TheWallet> wallets = repo.findAll();
+        List<TheWallet> wallets = strategyRepo.findAll();
         for (TheWallet wallet : wallets) {
             if(wallet.getExpiry().isBefore(LocalDate.now())){
                 wallet.setStatus(Status.CLOSED);
-                repo.save(wallet);
+                strategyRepo.save(wallet);
             }
         }
     }
