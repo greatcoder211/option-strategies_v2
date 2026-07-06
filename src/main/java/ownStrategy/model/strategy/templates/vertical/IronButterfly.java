@@ -7,6 +7,7 @@ import ownStrategy.exception.SpreadException;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
+import ownStrategy.model.PricingContext;
 import ownStrategy.model.strategy.NamedStrategy;
 import ownStrategy.model.structure.VerticalStructure;
 import java.time.LocalDate;

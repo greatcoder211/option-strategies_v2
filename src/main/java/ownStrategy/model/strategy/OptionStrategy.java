@@ -1,8 +1,6 @@
 package ownStrategy.model.strategy;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.strategyPanel.Request;
@@ -35,50 +33,52 @@ public abstract class OptionStrategy {
 
     public abstract List<ChartPoint> calculatePreviewChart(Request request);
 
-    public double calculateNetPremium(double spotPrice, PricingContext pricingContext){
+    public double calculateNetPremium(double entrySpotPrice, PricingContext pricingContext){
         double res = 0;
         for(OptionLeg leg : optionLegs){
             if(leg.position().equals(Belfort.SELL) && leg.type().equals(OptionType.CALL)){
-                res += BlackScholesUtils.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res += BlackScholesUtils.calculateCallPrice(entrySpotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.SELL) && leg.type().equals(OptionType.PUT)){
-                res += BlackScholesUtils.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res += BlackScholesUtils.calculatePutPrice(entrySpotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.BUY) && leg.type().equals(OptionType.CALL)){
-                res -= BlackScholesUtils.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res -= BlackScholesUtils.calculateCallPrice(entrySpotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.BUY) && leg.type().equals(OptionType.PUT)){
-                res -= BlackScholesUtils.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res -= BlackScholesUtils.calculatePutPrice(entrySpotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
-            res *= leg.strikePrice();
+            res *= leg.quantity();
         }
         return res;
     }
     //mnozniki kierunku- w matematyce finansowej mnozymy razy 1 lub -1 faktycznie trochę szybsze ale bez przesady
-    public double calculatePayoff(double spotPrice) {
+    //tam: "entrySpotPrice", a tutaj: "simulatingSpotPrice", no logiczne, czyż nie?
+    public double calculatePayoff(double simulatedSpotPrice) {
         double res = 0;
         for(OptionLeg leg : optionLegs){
             if(leg.position().equals(Belfort.BUY)){
-                if(leg.type().equals(OptionType.CALL) && leg.strikePrice() < spotPrice){
-                    res += spotPrice - leg.strikePrice();
+                if(leg.type().equals(OptionType.CALL) && leg.strikePrice() < simulatedSpotPrice){
+                    res += simulatedSpotPrice - leg.strikePrice();
                 }
-                if(leg.type().equals(OptionType.PUT) && leg.strikePrice() > spotPrice){
-                    res += leg.strikePrice() - spotPrice;
+                if(leg.type().equals(OptionType.PUT) && leg.strikePrice() > simulatedSpotPrice){
+                    res += leg.strikePrice() - simulatedSpotPrice;
                 }
             }
             else if(leg.position().equals(Belfort.SELL)){
-                if(leg.type().equals(OptionType.CALL) && leg.strikePrice() < spotPrice){
-                    res -= spotPrice - leg.strikePrice();
+                if(leg.type().equals(OptionType.CALL) && leg.strikePrice() < simulatedSpotPrice){
+                    res -= simulatedSpotPrice - leg.strikePrice();
                 }
-                if(leg.type().equals(OptionType.PUT) && leg.strikePrice() > spotPrice){
-                    res -= leg.strikePrice() - spotPrice;
+                if(leg.type().equals(OptionType.PUT) && leg.strikePrice() > simulatedSpotPrice){
+                    res -= leg.strikePrice() - simulatedSpotPrice;
                 }
             }
             res *= leg.quantity();
         }
         return res;
     }
-    public double calculatePnL(double spotPrice, PricingContext pricingContext){
-        return calculatePayoff(spotPrice) - calculateNetPremium(spotPrice, pricingContext);
+
+    public double calculatePnL(double entrySpotPrice, double simulatedSpotPrice, PricingContext pricingContext){
+        return calculatePayoff(simulatedSpotPrice) - calculateNetPremium(entrySpotPrice, pricingContext);
     }
 }

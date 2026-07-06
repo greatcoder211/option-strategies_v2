@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import ownStrategy.dto.*;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.dto.strategyPanel.Trade;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
@@ -22,12 +23,13 @@ public class OptionController {
     public OptionController(OptionService service) {
         this.service = service;
     }
+//fabryka/rejestr: musisz zdecydować w co teraz idziesz
     @PostMapping("/preview")
     @ResponseBody
-    public Map<String, Object> preview(@RequestBody Trade trade){
+    public Map<String, Object> preview(@RequestBody Request request){
         Map<String, Object> response = new HashMap<>();
-        response.put("strategyName", trade.getStrategy().getName());
-        response.put("chartPoints", points);
+        response.put("strategyName", request.getStrategyName());
+        response.put("chartPoints", service.calculatePreviewChart(service.getStockPrice(request.getTicker()), ));
         return response;
     }
     @PostMapping("/execute")

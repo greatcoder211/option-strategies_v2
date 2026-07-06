@@ -59,65 +59,21 @@ public class OptionService {
         this.chartGenerator = chartGenerator;
     }
 //-- BIG THINGS OUGHT TO HAPPEN --
-    public void makePreview(Request request) {
-        double spotPrice = getStockPrice(request.getTicker());
-        //validate Data- nie wiemy które
 
-        validateSpreads(request.getSpreads(), tradeFirstPart.getStrategy());//H
-        List<OptionLeg> legs = calculateLegs(tradeFirstPart.getStrategy(), spotPrice, tradeFirstPart.getSpreads());
-        List<ChartPoint> points = chart(tradeFirstPart.getStrategy(), spotPrice);
-    }
-    public void checkType(OptionType optionType, SpreadStrategy strategy) {
-        String name = strategy.getName();
-        if((name.contains("Iron Butterfly") || name.contains("Iron Condor") || name.contains("Strangle")) && !optionType.equals(OptionType.NA))
-            throw new OptionTypeException("Wrong optiontype. This type of strategy can only be played in a CALL or PUT variant.");
-        else if((name.contains("Butterfly") || name.contains("Ratio Spread") || name.contains("Backspread") || name.contains("Bull") || name.contains("Bear")) && optionType.equals(OptionType.NA))
-            throw new OptionTypeException("Wrong optiontype. You have to play CALL or PUT.");
-    }
-
-    public void setType(OptionType type, SpreadStrategy strategy) {
-        if (type == null) return;
-        if(type.equals(OptionType.CALL)){
-            strategy.setType(OptionType.CALL);
+    public List<ChartPoint> calculatePreviewChart(double spotPrice, OptionStrategy strategy) {
+        List<ChartPoint> points = new ArrayList<>();
+        try {
+            points = chartGenerator.draw(spotPrice, strategy);
+        } catch (Exception e) {
+            e.printStackTrace();
+            e.getMessage();
         }
-        else if(type.equals(OptionType.PUT)){
-            strategy.setType(OptionType.PUT);
-        }
-    }
-    public List<OptionLeg> calculateLegs(SpreadStrategy os, double price, List<Double> spreadValues) {
-        List<Double> prices = os.setThePrices(price, spreadValues, os);
-        for (int i = 0; i < prices.size(); i++) {
-            prices.set(i, Math.round(prices.get(i) * 100.0) / 100.0);
-        }
-        os.setLegs(os.setOptionLegs(prices));
-        return os.setOptionLegs(prices);
-    }
-    public void validateSpreads(List<Double> spreads, SpreadStrategy strategy) {
-        String message = "Invalid spreads. Only positive numerical values.";
-        if (spreads == null || spreads.isEmpty()) {
-            throw new SpreadException(message);
-        }
-        for (Double s : spreads) {
-            if (s == null || s <= 0) {
-                throw new SpreadException(message);
-            }
-        }
-        //spread number check
-        if(strategy.getSpreadNumber() != spreads.size()){
-            throw new SpreadException(message);
-        }
+        return points;
     }
     public double getStockPrice(String ticker) {
         return AlphaVantageStock.getPrice(ticker);
     }
 
-    public List<ChartPoint> chart(OptionStrategy strategy, double spotPrice) {
-        List<ChartPoint> points = new ArrayList<>();
-        try {
-            points = chartGenerator.draw(strategy, spotPrice);
-        } catch (Exception e) { e.printStackTrace();}
-        return points;
-    }
 // --- DEBUG ---
 
 
@@ -215,7 +171,7 @@ public class OptionService {
     }
 
     public double revenues(OptionStrategy strategy, double currentPrice, double gamePrice, int quant) {
-        return OptionCalculator.function(strategy, currentPrice, gamePrice, quant);
+        return optionCalculator.function(gamePrice, currentPrice, strategy);
     }
 
     @Transactional

@@ -10,8 +10,8 @@ public class OptionCalculator {
     public OptionCalculator(DefaultPricingContext defaultPricingContext) {
         this.defaultPricingContext = defaultPricingContext;
     }
-    public double function(OptionStrategy optionStrategy, double entrySpotPrice) {
-        return optionStrategy.calculatePnL(entrySpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+    public double function(double entrySpotPrice, double simulatedSpotPrice, OptionStrategy optionStrategy) {
+        return optionStrategy.calculatePnL(entrySpotPrice, simulatedSpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
     }
 }
 //bylo w pnl:       return optionStrategy.getQuantity() * (optionStrategy.calculateNetPremium(entrySpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()))  + optionStrategy.calculatePayoff(simulatedSpotPrice));
