@@ -1,13 +1,10 @@
 package ownStrategy.dto;
-
 import lombok.*;
-import org.springframework.data.domain.Sort;
-import ownStrategy.logic.sPattern.Belfort;
-import ownStrategy.logic.sPattern.SpreadStrategy;
+import ownStrategy.config.StrategiesPage;
+import ownStrategy.model.Belfort;
 
 import java.time.LocalDate;
 import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -21,9 +18,8 @@ public class FilterDTO {
         private LocalDate expiryFrom;
         private LocalDate expiryTo;
         private List<SortDTO> sortBy;
+        private StrategiesPage strategiesPage;
         private int page = 0;
         private int size = 10;
-        public void setSize(int size) {
-        this.size = Math.min(size, 100);
-        }
 }
+//tu zostaje klsa(trochę bardziej złożone)

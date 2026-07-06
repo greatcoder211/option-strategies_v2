@@ -1,25 +1,10 @@
 package ownStrategy.controller;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.Update;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import ownStrategy.dto.*;
-import ownStrategy.logic.finance.OptionCalculator;
-import ownStrategy.logic.network.TickerSearch;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.OptionStrategy;
-import ownStrategy.logic.sPattern.OptionType;
-import ownStrategy.logic.sPattern.SpreadStrategy;
+import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
 import ownStrategy.service.OptionService;
 
@@ -35,7 +20,6 @@ public class OptionController {
     public OptionController(OptionService service) {
         this.service = service;
     }
-///fasada
     @PostMapping("/preview")
     @ResponseBody
     public Map<String, Object> preview(@RequestBody TradingDTO trade){
@@ -142,7 +126,7 @@ public class OptionController {
                                      @PathVariable OptionType optionType,
                                      @RequestBody StrategyRequest request
                         ){
-            Belfort position = service.belfort(pos);
+            Belfort position = service.position(pos);
             SpreadStrategy strategy = service.requested(type, position);
             service.checkQuant(quant);
             List<CompanyDTO> companies = tickerSearch.Companies(key);
@@ -151,11 +135,11 @@ public class OptionController {
             String ticker = companies.get(choice - 1).getTicker();
             service.setType(optionType, strategy);
             strategy.setTimeToExpiry(ChronoUnit.DAYS.between(LocalDate.now(), request.getExpiry()) / 365.0);
-            double price = service.getStockPrice(ticker);
-            price = 220.0;
+            double strikePrice = service.getStockPrice(ticker);
+            strikePrice = 220.0;
             service.validateSpreads(request.getSpreads());
-            List<OptionLeg> legs = service.calculateLegs(strategy, price, request.getSpreads());
-            List<ChartPoint> points = service.chart(strategy, legs, price, quant);
+            List<OptionLeg> legs = service.calculateLegs(strategy, strikePrice, request.getSpreads());
+            List<ChartPoint> points = service.chart(strategy, legs, strikePrice, quant);
             Map<String, Object> response = new HashMap<>();
             response.put("strategyName", strategy.getName());
             response.put("chartPoints", points);

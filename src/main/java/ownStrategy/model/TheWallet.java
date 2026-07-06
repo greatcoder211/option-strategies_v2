@@ -3,7 +3,6 @@ package ownStrategy.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,8 +11,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import ownStrategy.dto.Status;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.OptionType;
+import ownStrategy.dto.OptionType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

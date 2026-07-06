@@ -13,19 +13,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.dto.FilterDTO;
-import ownStrategy.dto.SortDTO;
-import ownStrategy.dto.Status;
-import ownStrategy.exceptions.APILimitExceededException;
-import ownStrategy.exceptions.OptionTypeException;
-import ownStrategy.exceptions.QuantityException;
-import ownStrategy.exceptions.SpreadException;
+import ownStrategy.dto.*;
+import ownStrategy.exception.APILimitExceededException;
+import ownStrategy.exception.OptionTypeException;
+import ownStrategy.exception.QuantityException;
+import ownStrategy.exception.SpreadException;
 import ownStrategy.logic.finance.Chart;
 import ownStrategy.logic.WalletFilter;
 import ownStrategy.logic.finance.OptionCalculator;
 import ownStrategy.logic.network.AlphaVantageStock;
-import ownStrategy.logic.sPattern.*;
+import ownStrategy.logic.oldStrategy.*;
+import ownStrategy.model.Belfort;
+import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
 import ownStrategy.model.User;
 import ownStrategy.repository.StrategyRepository;
@@ -49,14 +48,14 @@ public class OptionService {
         this.mongoTemplate = mongoTemplate;
         this.walletFilter = walletFilter;
     }
-/*    public SpreadStrategy requested(String type, Belfort belfort) {
+/*    public SpreadStrategy requested(String type, Belfort position) {
         String formattedType = Arrays.stream(type.split("_"))
                 .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
                 .collect(Collectors.joining("_"));
         try {
             Class<? extends SpreadStrategy> clazz = StrategyType.valueOf(formattedType).getStrategyClass();
             return clazz.getConstructor(String.class, Belfort.class)
-                    .newInstance(formattedType.replace("_", " "), belfort);
+                    .newInstance(formattedType.replace("_", " "), position);
 
         } catch (Exception e) {
             throw new RuntimeException("We couldn't manage to initialize your strategy: " + type);
@@ -278,8 +277,8 @@ public class OptionService {
                 case "Earliest date" -> walletFilter.sortByEarliestTradeDate();
                 case "Max quantity"   -> walletFilter.sortByHighestQuantity();
                 case "Min quantity"   -> walletFilter.sortByLowestQuantity();
-                case "Max price"   -> walletFilter.sortByHighestPrice();
-                case "Min price"   -> walletFilter.sortByLowestPrice();
+                case "Max strikePrice"   -> walletFilter.sortByHighestPrice();
+                case "Min strikePrice"   -> walletFilter.sortByLowestPrice();
                 case "Earliest expiry date" -> walletFilter.sortByFastestExpiry();
                 case "Latest expiry date" -> walletFilter.sortByLatestExpiry();
                 default           -> walletFilter.sortByLatestTradeDate();

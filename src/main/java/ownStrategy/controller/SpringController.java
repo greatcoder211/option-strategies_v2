@@ -1,17 +1,16 @@
 package ownStrategy.controller;
 
 import jakarta.validation.constraints.Min;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.CompanyDTO;
 import ownStrategy.dto.StrategyRequest;
 import ownStrategy.logic.network.TickerSearch;
-import ownStrategy.logic.sPattern.Belfort;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.OptionType;
-import ownStrategy.logic.sPattern.SpreadStrategy;
+import ownStrategy.model.Belfort;
+import ownStrategy.model.OptionLeg;
+import ownStrategy.dto.OptionType;
+import ownStrategy.logic.oldStrategy.SpreadStrategy;
 import ownStrategy.service.SpringService;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -45,7 +44,7 @@ public class SpringController {
         service.checkQuant(quant);
         List<CompanyDTO> companies = tickerSearch.Companies(key);
         int choice = service.getChoice(selection);
-        String ticker = companies.get(choice - 1).getTicker();
+        String ticker = companies.get(choice - 1).ticker();
         service.setType(optionType, strategy);
         strategy.setTimeToExpiry(ChronoUnit.DAYS.between(LocalDate.now(), request.getExpiry()) / 365.0);
         double price = service.getStockPrice(ticker);
@@ -67,7 +66,7 @@ public class SpringController {
         int i = 0;
         for (CompanyDTO company : companies) {
             i++;
-            companyList.add(i + " - " + company.getName() + " (" + company.getTicker() + ")");
+            companyList.add(i + " - " + company.name() + " (" + company.ticker() + ")");
         }
         return companyList;
     }

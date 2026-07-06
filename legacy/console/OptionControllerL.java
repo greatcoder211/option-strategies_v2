@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ownStrategy.legacy.oPattern.PriceWatcher;
 import ownStrategy.logic.OptionRepositoryL;
-import ownStrategy.logic.sPattern.*;
+import ownStrategy.logic.oldStrategy.*;
 import ownStrategy.legacy.oPattern.Game;
 import ownStrategy.legacy.oPattern.StrategyCalculator;
 import ownStrategy.dto.ChartPoint;
@@ -27,11 +27,11 @@ public class OptionControllerL {
     }
 
     public void start() {
-        ui.print2("You want to check the price on your current position?\n1.Yes\n2.No");
+        ui.print2("You want to check the strikePrice on your current position?\n1.Yes\n2.No");
         if (ui.getInt() == 1) {
             try {
                 JsonNode root = repository.loadGameJson();
-                service.currentPosition(root.path("ticker").asText(), root.path("price").asDouble());
+                service.currentPosition(root.path("ticker").asText(), root.path("strikePrice").asDouble());
             } catch (Exception e) { e.printStackTrace(); }
         }
 

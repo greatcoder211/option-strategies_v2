@@ -2,11 +2,15 @@ package ownStrategy.service;
 
 import org.springframework.stereotype.Service;
 import ownStrategy.dto.ChartPoint;
-import ownStrategy.exceptions.QuantityException;
-import ownStrategy.exceptions.SpreadException;
+import ownStrategy.model.OptionLeg;
+import ownStrategy.dto.OptionType;
+import ownStrategy.dto.StrategyType;
+import ownStrategy.exception.QuantityException;
+import ownStrategy.exception.SpreadException;
 import ownStrategy.logic.finance.Chart;
 import ownStrategy.logic.network.AlphaVantageStock;
-import ownStrategy.logic.sPattern.*;
+import ownStrategy.logic.oldStrategy.*;
+import ownStrategy.model.Belfort;
 
 import java.util.*;
 import java.util.stream.Collectors;

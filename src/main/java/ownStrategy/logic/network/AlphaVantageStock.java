@@ -2,7 +2,7 @@ package ownStrategy.logic.network;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ownStrategy.exceptions.APILimitExceededException;
+import ownStrategy.exception.APILimitExceededException;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -49,13 +49,13 @@ public class AlphaVantageStock {
             JsonNode globalQuote = rootNode.path("Global Quote");
 
             // Sprawdzenie czy "Global Quote" istnieje i ma pole ceny
-            if (globalQuote.isMissingNode()||!globalQuote.has("05. price")) {
+            if (globalQuote.isMissingNode()||!globalQuote.has("05. strikePrice")) {
                 System.err.println("SUROWA ODPOWIEDŹ Z API: " + jsonResponse);
                 return -1.0;
             }
 
             // Pobranie wartości i konwersja
-            String priceStr = globalQuote.get("05. price").asText();
+            String priceStr = globalQuote.get("05. strikePrice").asText();
             return Double.parseDouble(priceStr);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

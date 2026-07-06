@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ownStrategy.logic.finance.BlackScholes;
 import ownStrategy.logic.finance.OptionCalculator;
-import ownStrategy.logic.sPattern.Belfort;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.SpreadStrategy;
+import ownStrategy.logic.oldStrategy.Belfort;
+import ownStrategy.logic.oldStrategy.OptionLeg;
+import ownStrategy.logic.oldStrategy.SpreadStrategy;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -62,11 +62,11 @@ public class StrategyCalculator implements Observer {
     public void update() {
         try{
             JsonNode root = mapper.readValue(new File("data/game.json"),  JsonNode.class);
-            gamePrice = root.path("price").asDouble();
+            gamePrice = root.path("strikePrice").asDouble();
             currentPrice = watcher.getCurrentPrice();
             String name = root.path("name").asText();
-            Belfort belf = Belfort.valueOf(root.path("belfort").asText());
-            String fullClassName = "ownStrategy.sPattern." + name.replace(" ", "");
+            Belfort belf = Belfort.valueOf(root.path("position").asText());
+            String fullClassName = "ownStrategy.oldStrategy." + name.replace(" ", "");
             Class<?> clazz = Class.forName(fullClassName);
             SpreadStrategy strategy = (SpreadStrategy) clazz
                     .getDeclaredConstructor(String.class, Belfort.class)
@@ -89,7 +89,7 @@ public class StrategyCalculator implements Observer {
             for(OptionLeg leg : legs) {
                 System.out.println("Leg Strike: " + leg.getStrikePrice() + " Type: " + leg.getType() + " Current Call Price: " + BlackScholes.calculateCallPrice(currentPrice, leg.getStrikePrice(), ChronoUnit.DAYS.between(LocalDate.now(), expiry) / 365.0, 0.05, 0.3));
             }
-            System.out.println("The price was " + gamePrice + " and now it is " + currentPrice);
+            System.out.println("The strikePrice was " + gamePrice + " and now it is " + currentPrice);
             if(f > 0){
                 System.out.println("Profit: " + f);
             }

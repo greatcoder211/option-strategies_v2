@@ -4,10 +4,10 @@ import org.springframework.stereotype.Service;
 import ownStrategy.logic.network.AlphaVantageStock;
 import ownStrategy.legacy.oPattern.PriceWatcher;
 import ownStrategy.legacy.oPattern.StrategyCalculator;
-import ownStrategy.logic.sPattern.Belfort;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.SpreadStrategy;
-import ownStrategy.logic.sPattern.StrategyType;
+import ownStrategy.logic.oldStrategy.Belfort;
+import ownStrategy.logic.oldStrategy.OptionLeg;
+import ownStrategy.logic.oldStrategy.SpreadStrategy;
+import ownStrategy.logic.oldStrategy.StrategyType;
 
 import java.lang.reflect.Constructor;
 import java.util.List;

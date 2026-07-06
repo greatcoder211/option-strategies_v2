@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ownStrategy.dto.CompanyDTO;
-import ownStrategy.exceptions.KeyWordException;
-import ownStrategy.exceptions.TickerNotFoundException;
+import ownStrategy.exception.KeyWordException;
+import ownStrategy.exception.TickerNotFoundException;
 import ownStrategy.model.SearchHistory;
 import ownStrategy.repository.SearchHistoryRepository;
 

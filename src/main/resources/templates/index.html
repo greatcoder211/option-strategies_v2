@@ -212,7 +212,7 @@
         const ctx = document.getElementById('myChart').getContext('2d');
         if (myChart) myChart.destroy();
 
-        // Mapowanie pól 'price' i 'profit' na 'x' i 'y' dla Chart.js
+        // Mapowanie pól 'strikePrice' i 'profit' na 'x' i 'y' dla Chart.js
         const mappedData = (pointsData || []).map(p => ({
             x: p.price,
             y: p.profit

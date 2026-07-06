@@ -1,8 +1,7 @@
 package ownStrategy.logic.finance;
 
 import ownStrategy.dto.ChartPoint;
-import ownStrategy.logic.sPattern.OptionLeg;
-import ownStrategy.logic.sPattern.OptionStrategy;
+import ownStrategy.model.OptionLeg;
 
 import java.util.ArrayList;
 import java.util.List;

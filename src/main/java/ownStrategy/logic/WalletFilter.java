@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Component;
 import ownStrategy.dto.SpreadType;
 import ownStrategy.dto.Status;
-import ownStrategy.logic.sPattern.Belfort;
+import ownStrategy.model.Belfort;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -77,11 +77,11 @@ public class WalletFilter {
     }
 
     public Sort sortByHighestPrice() {
-        return Sort.by(Sort.Direction.DESC, "price");
+        return Sort.by(Sort.Direction.DESC, "strikePrice");
     }
 
     public Sort sortByLowestPrice() {
-        return Sort.by(Sort.Direction.ASC, "price");
+        return Sort.by(Sort.Direction.ASC, "strikePrice");
     }
 
     public Sort sortByFastestExpiry() {

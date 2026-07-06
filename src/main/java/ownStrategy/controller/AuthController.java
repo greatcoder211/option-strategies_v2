@@ -43,23 +43,23 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
+                        loginRequest.username(),
+                        loginRequest.password()
                 )
         );
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.username());
         final String jwt = jwtUtils.generateToken(userDetails);
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        if (userRepo.findByUsername(registerRequest.getUsername()).isPresent()) {
+        if (userRepo.findByUsername(registerRequest.username()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: Username is already taken!");
         }
         User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setEmail(registerRequest.getEmail());
-        user.setPassword(encoder.encode(registerRequest.getPassword()));
+        user.setUsername(registerRequest.username());
+        user.setEmail(registerRequest.email());
+        user.setPassword(encoder.encode(registerRequest.password()));
         userRepo.save(user);
         final String jwt = jwtUtils.generateToken(user);
         return ResponseEntity.ok(new AuthResponse(jwt));
