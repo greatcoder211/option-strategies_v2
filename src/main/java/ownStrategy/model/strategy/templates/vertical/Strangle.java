@@ -1,5 +1,7 @@
 package ownStrategy.model.strategy.templates.vertical;
 
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
@@ -21,6 +23,7 @@ public class Strangle extends NamedStrategy {
 
     public Strangle(int quantity, Belfort position, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.strategyName = this.position.equals(Belfort.BUY) ? "Long Strangle" : "Short Strangle";
         super.optionLegs = generateLegs(spotPrice);
@@ -42,5 +45,11 @@ public class Strangle extends NamedStrategy {
         }
         return legs;
     }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
+    }
+
 }
 

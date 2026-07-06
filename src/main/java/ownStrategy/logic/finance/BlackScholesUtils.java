@@ -1,6 +1,6 @@
 package ownStrategy.logic.finance;
 
-public class BlackScholes {
+public class BlackScholesUtils {
     /**
      * Oblicza cenę opcji Call.
      *

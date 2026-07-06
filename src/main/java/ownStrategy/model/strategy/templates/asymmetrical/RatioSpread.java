@@ -1,4 +1,6 @@
 package ownStrategy.model.strategy.templates.asymmetrical;
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
@@ -22,6 +24,7 @@ public class RatioSpread extends NamedStrategy {
 
     public RatioSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.optionType = optionType;
         if(this.position.equals(Belfort.BUY) && this.optionType.equals(OptionType.CALL)){
@@ -83,5 +86,10 @@ public class RatioSpread extends NamedStrategy {
             }
         }
         return legs;
+    }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
     }
 }

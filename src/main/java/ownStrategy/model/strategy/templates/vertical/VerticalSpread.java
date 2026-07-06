@@ -1,5 +1,7 @@
 package ownStrategy.model.strategy.templates.vertical;
 
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
@@ -22,6 +24,7 @@ public class VerticalSpread extends NamedStrategy {
 
     public VerticalSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.optionType = optionType;
         if (this.position.equals(Belfort.BUY) && this.optionType.equals(OptionType.CALL)) {
@@ -53,5 +56,10 @@ public class VerticalSpread extends NamedStrategy {
             legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
         }
         return legs;
+    }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
     }
 }

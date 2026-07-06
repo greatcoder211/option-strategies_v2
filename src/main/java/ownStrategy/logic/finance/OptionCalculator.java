@@ -1,11 +1,19 @@
 package ownStrategy.logic.finance;
-
+import lombok.NoArgsConstructor;
+import ownStrategy.config.DefaultPricingContext;
+import ownStrategy.model.PricingContext;
+import ownStrategy.model.strategy.OptionStrategy;
+@NoArgsConstructor(force = true)
 public class OptionCalculator {
-
-    public static double function(OptionStrategy o, double price, double price2, int quantity) {
-        return quantity * (o.calculateNetPremium(o.getLegs(), price) + o.calculatePayoff(o.getLegs(), price2));
+    //we are going through the "stimulated" prices one by one to calculate PnL at specific points
+    private final DefaultPricingContext defaultPricingContext;
+    public OptionCalculator(DefaultPricingContext defaultPricingContext) {
+        this.defaultPricingContext = defaultPricingContext;
     }
-
+    public double function(OptionStrategy optionStrategy, double entrySpotPrice) {
+        return optionStrategy.calculatePnL(entrySpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+    }
 }
-//strikePrice- stockprice w momencie zakupu strategii
+//bylo w pnl:       return optionStrategy.getQuantity() * (optionStrategy.calculateNetPremium(entrySpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()))  + optionStrategy.calculatePayoff(simulatedSpotPrice));
+//price- stockprice w momencie zakupu strategii
 //price2- nowa cena(nowy stockprice)

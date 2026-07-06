@@ -14,11 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ownStrategy.dto.*;
+import ownStrategy.dto.strategyPanel.*;
+import ownStrategy.dto.strategyPanel.Trade;
 import ownStrategy.exception.APILimitExceededException;
 import ownStrategy.exception.OptionTypeException;
-import ownStrategy.exception.QuantityException;
 import ownStrategy.exception.SpreadException;
-import ownStrategy.logic.finance.Chart;
+import ownStrategy.logic.finance.ChartGenerator;
 import ownStrategy.logic.WalletFilter;
 import ownStrategy.logic.finance.OptionCalculator;
 import ownStrategy.logic.network.AlphaVantageStock;
@@ -27,6 +28,7 @@ import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
 import ownStrategy.model.User;
+import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.repository.StrategyRepository;
 import ownStrategy.repository.UserRepository;
 
@@ -42,43 +44,37 @@ public class OptionService {
     private final UserRepository userRepo;
     private final MongoTemplate mongoTemplate;
     private final WalletFilter walletFilter;
-    public OptionService(StrategyRepository strategyRepo, UserRepository userRepo, MongoTemplate mongoTemplate, WalletFilter walletFilter) {
+
+    //---GREAT REFACTORIZATION---
+    private final OptionCalculator optionCalculator;
+    private final ChartGenerator chartGenerator;
+
+    public OptionService(StrategyRepository strategyRepo, UserRepository userRepo, MongoTemplate mongoTemplate, WalletFilter walletFilter
+                        OptionCalculator optionCalculator, ChartGenerator chartGenerator) {
         this.strategyRepo = strategyRepo;
         this.userRepo = userRepo;
         this.mongoTemplate = mongoTemplate;
         this.walletFilter = walletFilter;
+        this.optionCalculator = optionCalculator;
+        this.chartGenerator = chartGenerator;
     }
-/*    public SpreadStrategy requested(String type, Belfort position) {
-        String formattedType = Arrays.stream(type.split("_"))
-                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
-                .collect(Collectors.joining("_"));
-        try {
-            Class<? extends SpreadStrategy> clazz = StrategyType.valueOf(formattedType).getStrategyClass();
-            return clazz.getConstructor(String.class, Belfort.class)
-                    .newInstance(formattedType.replace("_", " "), position);
+//-- BIG THINGS OUGHT TO HAPPEN --
+    public void makePreview(Request request) {
+        double spotPrice = getStockPrice(request.getTicker());
+        //validate Data- nie wiemy które
 
-        } catch (Exception e) {
-            throw new RuntimeException("We couldn't manage to initialize your strategy: " + type);
-        }
-    }*/
-
-    public void checkQuant(int quant){
-        if(quant < 1){
-            throw new QuantityException();
-        }
+        validateSpreads(request.getSpreads(), tradeFirstPart.getStrategy());//H
+        List<OptionLeg> legs = calculateLegs(tradeFirstPart.getStrategy(), spotPrice, tradeFirstPart.getSpreads());
+        List<ChartPoint> points = chart(tradeFirstPart.getStrategy(), spotPrice);
+    }
+    public void checkType(OptionType optionType, SpreadStrategy strategy) {
+        String name = strategy.getName();
+        if((name.contains("Iron Butterfly") || name.contains("Iron Condor") || name.contains("Strangle")) && !optionType.equals(OptionType.NA))
+            throw new OptionTypeException("Wrong optiontype. This type of strategy can only be played in a CALL or PUT variant.");
+        else if((name.contains("Butterfly") || name.contains("Ratio Spread") || name.contains("Backspread") || name.contains("Bull") || name.contains("Bear")) && optionType.equals(OptionType.NA))
+            throw new OptionTypeException("Wrong optiontype. You have to play CALL or PUT.");
     }
 
-    public Belfort belfort(String pos){
-        if(pos.equals("BUY")){
-            return Belfort.BUY;
-        }
-        else if(pos.equals("SELL")){
-            return Belfort.SELL;
-        }
-        else {
-            throw new RuntimeException("You either BUY or SELL. You cannot do it other way." + pos);
-        }
-    }
     public void setType(OptionType type, SpreadStrategy strategy) {
         if (type == null) return;
         if(type.equals(OptionType.CALL)){
@@ -96,31 +92,6 @@ public class OptionService {
         os.setLegs(os.setOptionLegs(prices));
         return os.setOptionLegs(prices);
     }
-
-    public double getStockPrice(String ticker) {
-        return AlphaVantageStock.getPrice(ticker);
-    }
-
-    public List<ChartPoint> chart(OptionStrategy strategy, List<OptionLeg> legs, double price, int quantity) {
-        List<ChartPoint> points = new ArrayList<>();
-        try {
-            points = Chart.draw(strategy, legs, price, quantity);
-        } catch (Exception e) { e.printStackTrace();}
-        return points;
-    }
-
-    public int getChoice(String line){
-        try {
-            if(line.charAt(0) <= '9'){
-                return Character.getNumericValue(line.charAt(0));
-            }
-            else{
-                return Integer.parseInt(line.split(" ")[0]);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Could not parse index from: " + line);
-        }
-    }
     public void validateSpreads(List<Double> spreads, SpreadStrategy strategy) {
         String message = "Invalid spreads. Only positive numerical values.";
         if (spreads == null || spreads.isEmpty()) {
@@ -134,6 +105,45 @@ public class OptionService {
         //spread number check
         if(strategy.getSpreadNumber() != spreads.size()){
             throw new SpreadException(message);
+        }
+    }
+    public double getStockPrice(String ticker) {
+        return AlphaVantageStock.getPrice(ticker);
+    }
+
+    public List<ChartPoint> chart(OptionStrategy strategy, double spotPrice) {
+        List<ChartPoint> points = new ArrayList<>();
+        try {
+            points = chartGenerator.draw(strategy, spotPrice);
+        } catch (Exception e) { e.printStackTrace();}
+        return points;
+    }
+// --- DEBUG ---
+
+
+
+    public Belfort belfort(String pos){
+        if(pos.equals("BUY")){
+            return Belfort.BUY;
+        }
+        else if(pos.equals("SELL")){
+            return Belfort.SELL;
+        }
+        else {
+            throw new RuntimeException("You either BUY or SELL. You cannot do it other way." + pos);
+        }
+    }
+
+    public int getChoice(String line){
+        try {
+            if(line.charAt(0) <= '9'){
+                return Character.getNumericValue(line.charAt(0));
+            }
+            else{
+                return Integer.parseInt(line.split(" ")[0]);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not parse index from: " + line);
         }
     }
     public List<TheWallet> getAllTheseWallets(){
@@ -293,17 +303,22 @@ public class OptionService {
         return finalSort;
     }
 
-    public void checkType(OptionType optionType, SpreadStrategy strategy) {
-        String name = strategy.getName();
-        if((name.contains("Iron Butterfly") || name.contains("Iron Condor") || name.contains("Strangle")) && !optionType.equals(OptionType.NA))
-            throw new OptionTypeException("Wrong optiontype. This type of strategy can only be played in a CALL or PUT variant.");
-        else if((name.contains("Butterfly") || name.contains("Ratio Spread") || name.contains("Backspread") || name.contains("Bull") || name.contains("Bear")) && optionType.equals(OptionType.NA))
-            throw new OptionTypeException("Wrong optiontype. You have to play CALL or PUT.");
-    }
-
     public void currentPriceCheck(double currentPrice) {
         if(currentPrice == -1)
             throw new APILimitExceededException("Probably API limit exceeded. See you tomorrow!");
     }
 
 }
+/*    public SpreadStrategy requested(String type, Belfort position) {
+        String formattedType = Arrays.stream(type.split("_"))
+                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
+                .collect(Collectors.joining("_"));
+        try {
+            Class<? extends SpreadStrategy> clazz = StrategyType.valueOf(formattedType).getStrategyClass();
+            return clazz.getConstructor(String.class, Belfort.class)
+                    .newInstance(formattedType.replace("_", " "), position);
+
+        } catch (Exception e) {
+            throw new RuntimeException("We couldn't manage to initialize your strategy: " + type);
+        }
+    }*/

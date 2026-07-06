@@ -1,6 +1,8 @@
 package ownStrategy.model.strategy.templates.horizontal;
 
+import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.OptionType;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.strategy.NamedStrategy;
@@ -24,6 +26,7 @@ public class CalendarSpread extends NamedStrategy {
     //z logiki musi wynikać, że tradeDate równe heute, ale trzeba przekazać mu i tak do konstruktora
     public CalendarSpread(int quantity, Belfort position, OptionType optionType, double strikePrice, LocalDate tradeDate, LocalDate shortExpiryDate, LocalDate longExpiryDate, double spotPrice) {
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.optionType = optionType;
         this.strikePrice = strikePrice;
@@ -79,5 +82,10 @@ public class CalendarSpread extends NamedStrategy {
             optionLegs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, strikePrice, tradeDate, longExpiryDate));
         }
         return optionLegs;
+    }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
     }
 }

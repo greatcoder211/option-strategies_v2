@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import ownStrategy.dto.*;
+import ownStrategy.dto.strategyPanel.Trade;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
 import ownStrategy.service.OptionService;
@@ -16,22 +17,14 @@ import java.util.Map;
 
 @RestController
 public class OptionController {
+    //solange es keinen Service mehr gibt, kann es so sein, sonst- muss es sich aendern
     private final OptionService service;
     public OptionController(OptionService service) {
         this.service = service;
     }
     @PostMapping("/preview")
     @ResponseBody
-    public Map<String, Object> preview(@RequestBody TradingDTO trade){
-        trade.getStrategy().setName();
-        service.checkQuant(trade.getQuant());//H
-        service.checkType(trade.getOptionType(), trade.getStrategy());//H
-        service.setType(trade.getOptionType(), trade.getStrategy());
-        trade.getStrategy().setTimeToExpiry(ChronoUnit.DAYS.between(LocalDate.now(), trade.getExpiry()) / 365.0);
-        double price = service.getStockPrice(trade.getTicker());
-        service.validateSpreads(trade.getSpreads(), trade.getStrategy());//H
-        List<OptionLeg> legs = service.calculateLegs(trade.getStrategy(), price, trade.getSpreads());
-        List<ChartPoint> points = service.chart(trade.getStrategy(), legs, price, trade.getQuant());
+    public Map<String, Object> preview(@RequestBody Trade trade){
         Map<String, Object> response = new HashMap<>();
         response.put("strategyName", trade.getStrategy().getName());
         response.put("chartPoints", points);
@@ -115,7 +108,26 @@ public class OptionController {
     }
 }
 
-/*    @PostMapping("/strategy/{pos}/{type}/{quant}/{key}/{optionType}")
+/*
+    @PostMapping("/preview")
+    @ResponseBody
+    public Map<String, Object> preview(@RequestBody Trade trade){
+        trade.getStrategy().setName();
+        service.checkQuant(trade.getQuant());//H
+        service.checkType(trade.getOptionType(), trade.getStrategy());//H
+        service.setType(trade.getOptionType(), trade.getStrategy());
+        trade.getStrategy().setTimeToExpiry(ChronoUnit.DAYS.between(LocalDate.now(), trade.getExpiry()) / 365.0);
+        double spotPrice = service.getStockPrice(trade.getTicker());
+        service.validateSpreads(trade.getSpreads(), trade.getStrategy());//H
+        List<OptionLeg> legs = service.calculateLegs(trade.getStrategy(), spotPrice, trade.getSpreads());
+        List<ChartPoint> points = service.chart(trade.getStrategy(), spotPrice);
+        Map<String, Object> response = new HashMap<>();
+        response.put("strategyName", trade.getStrategy().getName());
+        response.put("chartPoints", points);
+        return response;
+    }
+
+    @PostMapping("/strategy/{pos}/{type}/{quant}/{key}/{optionType}")
     @ResponseBody
     public Map<String, Object> major(@PathVariable String pos,
                                      @PathVariable String type,

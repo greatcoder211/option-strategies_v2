@@ -1,31 +1,54 @@
 package ownStrategy.model.strategy;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
+import ownStrategy.logic.finance.BlackScholesUtils;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
-import ownStrategy.logic.finance.BlackScholes;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.PricingContext;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 @Data
 public abstract class OptionStrategy {
-    public List<OptionLeg> optionLegs;
+    @NotNull
+    @Min(1)
+    protected final int quantity;
+    @NotNull
+    protected final Belfort position;
+    protected String strategyName;
+    @NotNull
+    protected List<OptionLeg> optionLegs;
+
+    public OptionStrategy(int quantity, Belfort position) {
+        this.quantity = quantity;
+        this.position = position;
+    }
+
     public abstract List<OptionLeg> generateLegs(double spotPrice);
-    //jak chcesz zrobić wariant opłacalności danej opcji na danym przedziale(nie: od dzisiaj), to trzeba podać parametr tego dnia "od kiedy" do metody
+
+    public abstract void validateData(double spotPrice);
+
+    public abstract List<ChartPoint> calculatePreviewChart(Request request);
+
     public double calculateNetPremium(double spotPrice, PricingContext pricingContext){
         double res = 0;
         for(OptionLeg leg : optionLegs){
             if(leg.position().equals(Belfort.SELL) && leg.type().equals(OptionType.CALL)){
-                res += BlackScholes.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res += BlackScholesUtils.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.SELL) && leg.type().equals(OptionType.PUT)){
-                res += BlackScholes.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res += BlackScholesUtils.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.BUY) && leg.type().equals(OptionType.CALL)){
-                res -= BlackScholes.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res -= BlackScholesUtils.calculateCallPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             else if(leg.position().equals(Belfort.BUY) && leg.type().equals(OptionType.PUT)){
-                res -= BlackScholes.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
+                res -= BlackScholesUtils.calculatePutPrice(spotPrice, leg.strikePrice(), ChronoUnit.DAYS.between(leg.tradeDate(), leg.expiryDate()) / 365.0, pricingContext.riskFreeRate(), pricingContext.volatility());
             }
             res *= leg.strikePrice();
         }

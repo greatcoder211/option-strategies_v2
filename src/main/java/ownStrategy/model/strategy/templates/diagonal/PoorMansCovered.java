@@ -1,5 +1,7 @@
 package ownStrategy.model.strategy.templates.diagonal;
+import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.OptionType;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.strategy.NamedStrategy;
@@ -23,6 +25,7 @@ public class PoorMansCovered extends NamedStrategy {
     //z logiki musi wynikać, że tradeDate równe heute, ale trzeba przekazać mu i tak do konstruktora
     public PoorMansCovered(int quantity, Belfort position, OptionType optionType, List<Double> strikePrices, LocalDate tradeDate, LocalDate shortExpiryDate, LocalDate longExpiryDate, double spotPrice) {
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.optionType = optionType;
         this.strikePrices = strikePrices;
@@ -60,4 +63,10 @@ public class PoorMansCovered extends NamedStrategy {
         }
         return optionLegs;
     }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
+    }
+
 }

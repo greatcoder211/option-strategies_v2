@@ -1,15 +1,15 @@
 package ownStrategy.model.strategy;
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class NamedStrategy extends OptionStrategy {
-    protected List<OptionLeg> optionLegs = new ArrayList<>();
-    public NamedStrategy(){
-        this.optionLegs = super.optionLegs;
+    public NamedStrategy(int quantity, Belfort position) {
+        super(quantity, position);
     }
     public abstract List<OptionLeg> generateLegs(double spotPrice);
+    public abstract List<ChartPoint> calculatePreviewChart(Request request);
+    public abstract void validateData(double spotPrice);
 }

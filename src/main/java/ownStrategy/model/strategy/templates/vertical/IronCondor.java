@@ -1,4 +1,6 @@
 package ownStrategy.model.strategy.templates.vertical;
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
@@ -18,6 +20,7 @@ public class IronCondor extends NamedStrategy {
 //although we need only one date, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
     public IronCondor(int quantity, Belfort position, List<Double> spreadValues, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         this.quantity = quantity;
+        super.quantity = quantity;
         this.position = position;
         this.name = position.equals(Belfort.BUY) ? "Reverse Iron Butterfly" : "Iron Butterfly";
         super.optionLegs = generateLegs(spotPrice);
@@ -44,4 +47,10 @@ public class IronCondor extends NamedStrategy {
         }
         return legs;
     }
+
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+
+    }
+
 }

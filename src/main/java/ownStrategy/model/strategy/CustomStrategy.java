@@ -1,5 +1,7 @@
 package ownStrategy.model.strategy;
 
+import ownStrategy.dto.ChartPoint;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.model.OptionLeg;
 
 import java.util.List;
@@ -12,6 +14,16 @@ public class CustomStrategy extends OptionStrategy {
     }
     @Override
     public List<OptionLeg> generateLegs(double spotPrice){
+        //n.a.
         return null;
+    }
+    @Override
+    public List<ChartPoint> calculatePreviewChart(Request request){
+        //TODO
+        return null;
+    }
+    @Override
+    public void validateData(double spotPrice) {
+        //TODO
     }
 }
