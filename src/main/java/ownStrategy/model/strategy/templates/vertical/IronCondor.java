@@ -1,3 +1,6 @@
+- wyjebać date'y(i tak są w każdym legu
+- zrobić nową, funkcjonalną, działającą klasę TheWallet np. PortfolioStrategy(part of Porfolio)
+
 package ownStrategy.model.strategy.templates.vertical;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.strategyPanel.Request;
@@ -15,12 +18,11 @@ public class IronCondor extends NamedStrategy {
     private final String name;
     private final VerticalStructure verticalStructure = new VerticalStructure();
     private final List<Double> spreadValues;
-    private final List<LocalDate> tradeDates;
+   private final List<LocalDate> tradeDates;
     private final List<LocalDate> expiryDates;
 //although we need only one date, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
     public IronCondor(int quantity, Belfort position, List<Double> spreadValues, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         this.quantity = quantity;
-        super.quantity = quantity;
         this.position = position;
         this.name = position.equals(Belfort.BUY) ? "Reverse Iron Butterfly" : "Iron Butterfly";
         super.optionLegs = generateLegs(spotPrice);

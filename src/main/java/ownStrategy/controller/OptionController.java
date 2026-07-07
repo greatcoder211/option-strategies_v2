@@ -9,6 +9,7 @@ import ownStrategy.dto.strategyPanel.Trade;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.model.TheWallet;
 import ownStrategy.service.OptionService;
+import ownStrategy.service.PreviewService;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -19,9 +20,11 @@ import java.util.Map;
 @RestController
 public class OptionController {
     //solange es keinen Service mehr gibt, kann es so sein, sonst- muss es sich aendern
-    private final OptionService service;
-    public OptionController(OptionService service) {
-        this.service = service;
+    private final OptionService optionService;
+    private final PreviewService previewService;
+    public OptionController(OptionService optionService, PreviewService previewService) {
+        this.optionService = optionService;
+        this.previewService = previewService;
     }
 //fabryka/rejestr: musisz zdecydować w co teraz idziesz
     @PostMapping("/preview")
@@ -29,12 +32,13 @@ public class OptionController {
     public Map<String, Object> preview(@RequestBody Request request){
         Map<String, Object> response = new HashMap<>();
         response.put("strategyName", request.getStrategyName());
-        response.put("chartPoints", service.calculatePreviewChart(service.getStockPrice(request.getTicker()), ));
+        response.put("chartPoints", previewService.processPreviewChart(request));
         return response;
     }
     @PostMapping("/execute")
     @ResponseBody
-    public TheWallet execute(@RequestBody TradingDTO trade){
+    public TheWallet execute(@RequestBody Request request){
+
         trade.getStrategy().setType(trade.getOptionType());
         trade.getStrategy().setName();
         service.checkType(trade.getOptionType(), trade.getStrategy());//H

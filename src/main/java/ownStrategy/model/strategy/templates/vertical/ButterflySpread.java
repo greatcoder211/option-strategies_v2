@@ -28,10 +28,6 @@ public class ButterflySpread extends NamedStrategy {
     //zakładam, że nie można zagrać zerowego spreadu, czyli de facto cztery opcje po tym samym strike'u
     @Positive
     private final double spreadValue;
-    @FutureOrPresent
-    private final List<LocalDate> tradeDates;
-    @FutureOrPresent
-    private final List<LocalDate> expiryDates;
 
     public ButterflySpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);

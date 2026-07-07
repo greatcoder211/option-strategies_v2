@@ -2,7 +2,9 @@ package ownStrategy.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Positive;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,34 +20,33 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-//no comment
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @Document(collection = "thewallet-nocomment")
 @CompoundIndex(name = "user_ticker_date_idx", def = "{'userID': 1, 'ticker': 1, 'date': -1}")
 public class TheWallet {
     @Id
-    private String key;
+    private String walletKey;
     @Indexed
     private String userID;
     @Positive
-    private int quant;
+    private int quantity;
     private String strategyName;
     private String ticker;
     private double price;
-    private OptionType type;
-    private List<OptionLeg> legs = new ArrayList<>();
+    private OptionType optionType;
+    private List<OptionLeg> optionLegs;
     @JsonFormat(pattern = "dd-MM-yyyy")
+    @FutureOrPresent
+    private LocalDate tradeDate;
     @Future
-    private LocalDate expiry;
-    private LocalDateTime date;
+    private LocalDate expiryDate;
+    //OPEN, CLOSE
     private Status status;
-    public TheWallet(String ticker, String strategyName, OptionType type, List<OptionLeg> legs, LocalDate expiry) {
+    public TheWallet(String ticker, String strategyName, OptionType optionType, List<OptionLeg> optionLegs, LocalDate expiryDate) {
         this.ticker = ticker;
         this.strategyName = strategyName;
-        this.type = type;
-        this.legs = legs;
-        this.expiry = expiry;
+        this.optionType = optionType;
+        this.optionLegs = optionLegs;
+        this.expiryDate = expiryDate;
     }
 }

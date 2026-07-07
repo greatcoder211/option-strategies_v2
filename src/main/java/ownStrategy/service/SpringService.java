@@ -8,7 +8,7 @@ import ownStrategy.dto.OptionType;
 import ownStrategy.dto.StrategyType;
 import ownStrategy.exception.QuantityException;
 import ownStrategy.exception.SpreadException;
-import ownStrategy.logic.network.AlphaVantageStock;
+import ownStrategy.logic.network.client.AlphaVantageStock;
 import ownStrategy.logic.oldStrategy.*;
 import ownStrategy.model.Belfort;
 

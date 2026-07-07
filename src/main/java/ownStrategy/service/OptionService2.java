@@ -3,7 +3,7 @@ package ownStrategy.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import ownStrategy.logic.network.AlphaVantageStock;
+import ownStrategy.logic.network.client.AlphaVantageStock;
 import ownStrategy.dto.OptionType;
 import ownStrategy.logic.oldStrategy.SpreadStrategy;
 import ownStrategy.model.TheWallet;

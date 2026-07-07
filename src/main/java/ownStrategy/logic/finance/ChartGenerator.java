@@ -1,6 +1,7 @@
 package ownStrategy.logic.finance;
 
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.model.strategy.OptionStrategy;
 
@@ -8,6 +9,7 @@ import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
 @NoArgsConstructor(force = true)
+@Component
 public class ChartGenerator {
     private OptionCalculator optionCalculator;
     public ChartGenerator(OptionCalculator optionCalculator) {
