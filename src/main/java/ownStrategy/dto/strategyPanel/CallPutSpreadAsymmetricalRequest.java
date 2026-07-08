@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public abstract class CallPutSpreadAsymmetricalRequest extends Request {
+public abstract class CallPutSpreadAsymmetricalRequest extends CallPutSpreadRequest {
     OptionType optionType;
     double spreadValue;
     LocalDate tradeDate;

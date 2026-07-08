@@ -73,7 +73,7 @@ public class OptionController2 {
     @GetMapping("/portfolio/user/{userID}")
     public List<TheWallet> getUserWallets(@PathVariable String userID){
         try{
-            return service.getTheWallets(userID);
+            return service.getUserPorfolios(userID);
         }
         catch(Exception e){
             e.printStackTrace();

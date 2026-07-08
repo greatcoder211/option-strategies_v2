@@ -3,7 +3,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
 @EqualsAndHashCode
 @Getter
@@ -14,8 +13,7 @@ public class Request {
     private int quantity;
     @NotNull
     private Belfort position;
-    @NotNull
-    private OptionType callPutVariant;
+//    private boolean ownStrategy;
     @NotBlank
     private String strategyName;
     //front-end dostarczy ticker- wypadkową key i selection(choice)

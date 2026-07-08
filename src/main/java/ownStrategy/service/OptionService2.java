@@ -3,6 +3,7 @@ package ownStrategy.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ownStrategy.dto.portfolio.PortfolioStrategy;
 import ownStrategy.logic.network.client.AlphaVantageStock;
 import ownStrategy.dto.OptionType;
 import ownStrategy.logic.oldStrategy.SpreadStrategy;
@@ -70,12 +71,12 @@ public class OptionService2 {
         return userRepo.findAll();
     }
 
-    public List<TheWallet> getTheWallets(String UserId) {
+    public List<PortfolioStrategy> getUserPorfolios(String UserId) {
         if(repo.findById(UserId).isPresent()){
             return repo.findByUserID(UserId);
         }
         else
-            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + UserId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + UserId);
     }
 
     public void firstWalletCheck(TheWallet wallet, SpreadStrategy strategy) {

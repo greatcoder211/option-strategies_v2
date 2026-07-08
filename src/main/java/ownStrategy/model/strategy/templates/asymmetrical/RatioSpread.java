@@ -1,9 +1,12 @@
 package ownStrategy.model.strategy.templates.asymmetrical;
 import ownStrategy.dto.ChartPoint;
 import ownStrategy.dto.strategyPanel.Request;
+import ownStrategy.exception.ChronologyException;
+import ownStrategy.exception.SpreadException;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
+import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
 import ownStrategy.model.structure.AsymmetricalStructure;
 
@@ -12,20 +15,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RatioSpread extends NamedStrategy {
-    private final int quantity;
-    private final Belfort position;
+public class RatioSpread extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     private final AsymmetricalStructure asymmetricalStructure = new AsymmetricalStructure();
     private final double spreadValue;
-    private final List<LocalDate> tradeDates;
-    private final List<LocalDate> expiryDates;
 
-    public RatioSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
-        this.quantity = quantity;
-        super.quantity = quantity;
-        this.position = position;
+    public RatioSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, double spotPrice, LocalDate tradeDate, LocalDate expiryDate) {
+        super(quantity, position);
+        this.spreadValue = spreadValue;
+        validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.optionType = optionType;
         if(this.position.equals(Belfort.BUY) && this.optionType.equals(OptionType.CALL)){
             this.strategyName = "Call Ratio Spread";
@@ -42,10 +41,7 @@ public class RatioSpread extends NamedStrategy {
         else{
             this.strategyName = "Undefined Ratio Spread";
         }
-        super.optionLegs = generateLegs(spotPrice);
-        this.spreadValue = spreadValue;
-        this.tradeDates = asymmetricalStructure.setTradeDates(List.of(tradeDate), 1);
-        this.expiryDates = asymmetricalStructure.setExpiryDates(List.of(expiryDate), 1);;
+        super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
     public List<Double> setPrices(double spotPrice, double spreadValue) {
@@ -58,38 +54,50 @@ public class RatioSpread extends NamedStrategy {
     }
 
     @Override
-    public List <OptionLeg> generateLegs(double spotPrice){
+    public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List <OptionLeg> legs = new ArrayList<>();
         List<Double> prices = this.setPrices(spotPrice, spreadValue);
         if(this.position.equals(Belfort.BUY)){
             if(this.optionType.equals(OptionType.PUT)){
                 legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
-                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(2), expiryDates.get(2), tradeDates.get(2)));
+                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
+                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(2), expiryDates.get(0), tradeDates.get(0)));
             }
             else if(this.optionType.equals(OptionType.CALL)){
                 legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.CALL, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
-                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.CALL, prices.get(2), expiryDates.get(2), tradeDates.get(2)));
+                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.CALL, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
+                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.CALL, prices.get(2), expiryDates.get(0), tradeDates.get(0)));
             }
         }
         else{
             if(this.optionType.equals(OptionType.PUT)){
                 legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
-                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(2), expiryDates.get(2), tradeDates.get(2)));
+                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(1), tradeDates.get(0)));
+                legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(2), expiryDates.get(2), tradeDates.get(0)));
             }
             else if(this.optionType.equals(OptionType.CALL)){
                 legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.CALL, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
-                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, prices.get(2), expiryDates.get(2), tradeDates.get(2)));
+                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, prices.get(1), expiryDates.get(1), tradeDates.get(0)));
+                legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, prices.get(2), expiryDates.get(2), tradeDates.get(0)));
             }
         }
         return legs;
     }
 
     @Override
-    public List<ChartPoint> calculatePreviewChart(Request request){
-
+    public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates){
+        //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
+        if(spreadValue <= 0 || spreadValue > spotPrice){
+            throw new SpreadException("Wrong spread value. Try again.");
+        }
+        //expiryDate musi być za tradeDate
+        if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
+            throw new ChronologyException("The expiry date should be after the trade date.");
+        }
+        //anything else?
+    }
+    @Override
+    public OptionType getOptionType() {
+        return optionType;
     }
 }

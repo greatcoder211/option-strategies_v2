@@ -1,2 +1,2 @@
 package ownStrategy.dto;
-public enum OptionType {CALL, PUT }
+public enum OptionType {CALL, PUT, NA}

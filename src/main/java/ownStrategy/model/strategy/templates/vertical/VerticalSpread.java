@@ -1,10 +1,11 @@
 package ownStrategy.model.strategy.templates.vertical;
 
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.dto.strategyPanel.Request;
+import ownStrategy.exception.ChronologyException;
+import ownStrategy.exception.SpreadException;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
+import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
 import ownStrategy.model.structure.VerticalStructure;
 
@@ -12,40 +13,34 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VerticalSpread extends NamedStrategy {
-    private final int quantity;
-    private final Belfort position;
+public class VerticalSpread extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     private final VerticalStructure verticalStructure = new VerticalStructure();
     private final double spreadValue;
-    private final List<LocalDate> tradeDates;
-    private final List<LocalDate> expiryDates;
 
     public VerticalSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
-        this.quantity = quantity;
-        super.quantity = quantity;
-        this.position = position;
+        super(quantity, position);
+        this.spreadValue = spreadValue;
+        validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.optionType = optionType;
-        if (this.position.equals(Belfort.BUY) && this.optionType.equals(OptionType.CALL)) {
+        if (position.equals(Belfort.BUY) && optionType.equals(OptionType.CALL)) {
             this.strategyName = "Bull Call Spread";
-        } else if (this.position.equals(Belfort.BUY) && this.optionType.equals(OptionType.PUT)) {
-            this.strategyName = "Bear Call Spread";
-        } else if (this.position.equals(Belfort.SELL) && this.optionType.equals(OptionType.CALL)) {
-            this.strategyName = "Bear Put Spread";
-        } else if (this.position.equals(Belfort.SELL) && this.optionType.equals(OptionType.PUT)) {
+        } else if (position.equals(Belfort.BUY) && optionType.equals(OptionType.PUT)) {
             this.strategyName = "Bull Put Spread";
+        } else if (position.equals(Belfort.SELL) && optionType.equals(OptionType.CALL)) {
+            this.strategyName = "Bear Call Spread";
+        } else if (position.equals(Belfort.SELL) && optionType.equals(OptionType.PUT)) {
+            this.strategyName = "Bear Put Spread";
         }
         else{
             this.strategyName = "Undefined Vertical Spread";
         }
-        super.optionLegs = generateLegs(spotPrice);
-        this.spreadValue = spreadValue;
-        this.tradeDates = verticalStructure.setTradeDates(List.of(tradeDate), 1);
-        this.expiryDates = verticalStructure.setExpiryDates(List.of(expiryDate), 1);
+        super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<OptionLeg> generateLegs(double spotPrice) {
+    @Override
+    public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
         List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadValue));
         if (this.position.equals(Belfort.BUY)) {
@@ -59,7 +54,20 @@ public class VerticalSpread extends NamedStrategy {
     }
 
     @Override
-    public List<ChartPoint> calculatePreviewChart(Request request){
+    public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
+        //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
+        if(spreadValue <= 0 || spreadValue > spotPrice){
+            throw new SpreadException("Wrong spread value. Try again.");
+        }
+        //expiryDate musi być za tradeDate
+        if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
+            throw new ChronologyException("The expiry date should be after the trade date.");
+        }
+        //anything else?
+    }
 
+    @Override
+    public OptionType getOptionType() {
+        return optionType;
     }
 }

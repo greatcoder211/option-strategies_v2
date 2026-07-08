@@ -3,88 +3,130 @@ package ownStrategy.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-
+import org.springframework.data.domain.Sort;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ownStrategy.config.DefaultPricingContext;
+import ownStrategy.config.StrategiesPage;
 import ownStrategy.dto.*;
-import ownStrategy.dto.strategyPanel.Trade;
+import ownStrategy.dto.portfolio.PortfolioStrategy;
+import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.exception.APILimitExceededException;
+import ownStrategy.logic.PortfolioStrategyFilter;
 import ownStrategy.logic.finance.ChartGenerator;
 import ownStrategy.logic.WalletFilter;
 import ownStrategy.logic.finance.OptionCalculator;
-import ownStrategy.logic.network.client.AlphaVantageStock;
-import ownStrategy.logic.oldStrategy.*;
-import ownStrategy.model.Belfort;
-import ownStrategy.model.TheWallet;
-import ownStrategy.model.User;
+import ownStrategy.logic.finance.StrategyCalculator;
+import ownStrategy.logic.mapper.StrategyMapper;
+import ownStrategy.logic.network.MarketDataClient;
+import ownStrategy.logic.network.TickerSearch;
+import ownStrategy.model.*;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.repository.StrategyRepository;
 import ownStrategy.repository.UserRepository;
-
+import ownStrategy.model.strategy.CallPutStrategy;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.data.domain.Sort.sort;
+
 @Service
 public class OptionService {
     private final StrategyRepository strategyRepo;
     private final UserRepository userRepo;
     private final MongoTemplate mongoTemplate;
-    private final WalletFilter walletFilter;
+    private final PortfolioStrategyFilter portfolioStrategyFilter;
+    private final DefaultPricingContext defaultPricingContext;
 
     //---GREAT REFACTORIZATION---
-    private final OptionCalculator optionCalculator;
     private final ChartGenerator chartGenerator;
+    private final StrategyMapper strategyMapper;
+    private final MarketDataClient marketDataClient;
+    private final TickerSearch tickerSearch;
 
-    public OptionService(StrategyRepository strategyRepo, UserRepository userRepo, MongoTemplate mongoTemplate, WalletFilter walletFilter
-                        OptionCalculator optionCalculator, ChartGenerator chartGenerator) {
+    public OptionService(StrategyRepository strategyRepo, UserRepository userRepo, MongoTemplate mongoTemplate, PortfolioStrategyFilter portfolioStrategyFilter,
+                         ChartGenerator chartGenerator, StrategyMapper strategyMapper, MarketDataClient marketDataClient,
+                         DefaultPricingContext defaultPricingContext, TickerSearch tickerSearch) {
         this.strategyRepo = strategyRepo;
         this.userRepo = userRepo;
         this.mongoTemplate = mongoTemplate;
-        this.walletFilter = walletFilter;
-        this.optionCalculator = optionCalculator;
+        this.portfolioStrategyFilter = portfolioStrategyFilter;
         this.chartGenerator = chartGenerator;
+        this.marketDataClient = marketDataClient;
+        this.defaultPricingContext = defaultPricingContext;
+        this.tickerSearch = tickerSearch;
     }
 //-- BIG THINGS OUGHT TO HAPPEN --
-
-    public List<ChartPoint> calculatePreviewChart(double spotPrice, OptionStrategy strategy) {
-        List<ChartPoint> points = new ArrayList<>();
-        try {
-            points = chartGenerator.draw(spotPrice, strategy);
-        } catch (Exception e) {
-            e.printStackTrace();
-            e.getMessage();
-        }
-        return points;
-    }
-    public double getStockPrice(String ticker) {
-        return AlphaVantageStock.getPrice(ticker);
+    public PortfolioStrategy createStrategy(Request request) {
+        double spotPrice = marketDataClient.getStockPrice(request.getTicker());
+        OptionStrategy domainStrategy = strategyMapper.mapToDomain(request);
+        return mapToPortfolio(domainStrategy, spotPrice, request.getTicker());
     }
 
-// --- DEBUG ---
-
-
-
-    public Belfort belfort(String pos){
-        if(pos.equals("BUY")){
-            return Belfort.BUY;
+    public PortfolioStrategy mapToPortfolio(OptionStrategy domainStrategy, double spotPrice, String ticker) {
+        OptionType optionType = null;
+        if (domainStrategy instanceof CallPutStrategy) {
+            optionType = ((CallPutStrategy) domainStrategy).getOptionType();
         }
-        else if(pos.equals("SELL")){
-            return Belfort.SELL;
+        Status strategyStatus;
+        if(playNow(domainStrategy.getOptionLegs())){
+            strategyStatus = Status.OPEN;
         }
-        else {
-            throw new RuntimeException("You either BUY or SELL. You cannot do it other way." + pos);
+        else{
+            strategyStatus = Status.PENDING;
+        }
+        return PortfolioStrategy.builder()
+                .quantity(domainStrategy.getQuantity())
+                .position(domainStrategy.getPosition())
+                .optionType(optionType)
+                .strategyName(domainStrategy.getStrategyName())
+                .ticker(ticker)
+                .spotPrice(spotPrice)
+                .optionLegs(domainStrategy.getOptionLegs())
+                .status(strategyStatus)
+                .build();
+    }
+    //jeśli choć jedna noga zaczyna grać od dzisiaj, to niech cała strategia stanie się teraźniejsza
+    public boolean playNow(List<OptionLeg> optionLegs){
+        for(OptionLeg optionLeg: optionLegs){
+            if(optionLeg.tradeDate().equals(LocalDate.now())) return true;
+        }
+        return false;
+    }
+
+    public List<PortfolioStrategy> getUserStrategies(String UserId) {
+        if(userRepo.findById(UserId).isPresent()){
+            return strategyRepo.findByUserID(UserId);
+        }
+        else{
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + UserId);
         }
     }
+
+    public double calculatePnL(List<OptionLeg> optionLegs, double entrySpotPrice, String ticker) {
+        double simulatedSpotPrice = marketDataClient.getStockPrice(ticker);
+        return StrategyCalculator.calculatePnL(optionLegs, entrySpotPrice, simulatedSpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+    }
+
+    public List<ChartPoint> makeChart(List<OptionLeg> optionLegs, Double spotPrice) {
+        return chartGenerator.draw(spotPrice, optionLegs);
+    }
+
+    public ChartPoint makeCurrentPriceMarker(List<OptionLeg> optionLegs, double entryPrice, String ticker) {
+        double currentPrice = marketDataClient.getStockPrice(ticker);
+        double currentProfit = StrategyCalculator.calculatePnL(optionLegs, entryPrice, currentPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+        return new ChartPoint(currentPrice, currentProfit);
+    }
+    // --- DEBUG ---
 
     public int getChoice(String line){
         try {
@@ -145,14 +187,6 @@ public class OptionService {
         return userRepo.findAll();
     }
 
-    public List<TheWallet> getTheWallets(String UserId) {
-        if(userRepo.findById(UserId).isPresent()){
-            return strategyRepo.findByUserID(UserId);
-        }
-        else
-            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + UserId);
-    }
-
     public void firstWalletCheck(TheWallet wallet, SpreadStrategy strategy) {
         if(strategy.getType() == null)
             strategy.setType(OptionType.NA);
@@ -166,10 +200,6 @@ public class OptionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "NA doesn't apply here. You have to choose a CALL or PUT variant for this type of strategy.");
     }
 
-    public double revenues(OptionStrategy strategy, double currentPrice, double gamePrice, int quant) {
-        return optionCalculator.function(gamePrice, currentPrice, strategy);
-    }
-
     @Transactional
     public void closePosition() {
         List<TheWallet> wallets = strategyRepo.findAll();
@@ -181,96 +211,73 @@ public class OptionService {
         }
     }
 
-
-    public Page<TheWallet> filter(FilterDTO filterDto) {
+//logikę tego też w teorii trzebaby wynieść do osobnego interfejsu funkcjonalnego(vielleicht fabryka), ale już mi się nie chce z tym tak pierdolić(no nie), tym bardziej, że dużo iwęcej if-ów już tu nie wejdzie(no ile można tworzyć filtrów)
+    public Page<PortfolioStrategy> filter(Filter filter) {
         List<Criteria> criteriaList = new ArrayList<>();
 
-        // 1. Dodawanie poszczególnych kryteriów, jeśli nie są nullem w DTO
-        if (filterDto.getStrategies() != null && !filterDto.getStrategies().isEmpty()) {
-            criteriaList.add(walletFilter.filterByStrategies(filterDto.getStrategies()));
-        }
-        if (filterDto.getSpreadType() != null) {
-            criteriaList.add(walletFilter.filterBySpreadType(filterDto.getSpreadType()));
-        }
-        if (filterDto.getPosition() != null) {
-            criteriaList.add(walletFilter.filterByPosition(filterDto.getPosition()));
-        }
-        if (filterDto.getCompaniesConcat() != null && !filterDto.getCompaniesConcat().isEmpty()) {
-            criteriaList.add(walletFilter.filterByCompanies(filterDto.getCompaniesConcat()));
-        }
-        if (filterDto.getStatus() != null) {
-            criteriaList.add(walletFilter.filterByStatus(filterDto.getStatus()));
-        }
-        if (filterDto.getExpiryFrom() != null || filterDto.getExpiryTo() != null) {
-            criteriaList.add(walletFilter.filterByExpiryRange(filterDto.getExpiryFrom(), filterDto.getExpiryTo()));
+        if(filter.getCreatedAtFrom() != null || filter.getCreatedAtTo() != null){
+            criteriaList.add(portfolioStrategyFilter.filterByCreatedAtRange(filter.getCreatedAtFrom(), filter.getCreatedAtTo()));
         }
 
-        // 2. Składanie zapytania
+        if (filter.getPosition() != null) {
+            criteriaList.add(portfolioStrategyFilter.filterByPosition(filter.getPosition()));
+        }
+
+        if (filter.getStrategies() != null && !filter.getStrategies().isEmpty()) {
+            criteriaList.add(portfolioStrategyFilter.filterByStrategies(filter.getStrategies()));
+        }
+
+        if (filter.getCompaniesConcat() != null && !filter.getCompaniesConcat().isEmpty()) {
+            criteriaList.add(portfolioStrategyFilter.filterByCompanies(filter.getCompaniesConcat()));
+        }
+
+        if(filter.getIsCallPutStrategy() != null) {
+            criteriaList.add(portfolioStrategyFilter.filterByCallPutStrategies(filter.getIsCallPutStrategy(), filter.getCallOrPut(), filter.getOptionType()));
+        }
+
+        if(filter.getIsTraditional() != null){
+            criteriaList.add(portfolioStrategyFilter.filterByTraditionalStrategies(filter.getIsTraditional()));
+        }
+
+        if(filter.getIsBrokenLeg() != null){
+            criteriaList.add(portfolioStrategyFilter.filterByBrokenLegs(filter.getIsBrokenLeg()));
+        }
+
+        if (filter.getTradeDateFrom() != null || filter.getTradeDateTo() != null) {
+            criteriaList.add(portfolioStrategyFilter.filterByTradeDateRange(filter.getTradeDateFrom(), filter.getTradeDateTo()));
+        }
+
+        if (filter.getExpiryDateFrom() != null || filter.getExpiryDateTo() != null) {
+            criteriaList.add(portfolioStrategyFilter.filterByExpiryDateRange(filter.getExpiryDateFrom(), filter.getExpiryDateTo()));
+        }
+
+        if (filter.getStatus() != null) {
+            criteriaList.add(portfolioStrategyFilter.filterByStatus(filter.getStatus()));
+        }
+        //złączenie wszystkich kryteriów
         Query query = new Query();
         if (!criteriaList.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
-            // // Łączy wszystkie aktywne filtry operatorem AND
         }
 
-        // 3. Obsługa sortowania (zawsze z domyślnym wynikiem)
-        Sort sort = sort(filterDto.getSortBy());
-        Pageable pageable = PageRequest.of(filterDto.getPage(), filterDto.getSize(), sort);
+        Sort sort = sort(filter.getStrategySortBy());
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize(), sort);
 
-        query.with(pageable);//sort wywaliłem, bo pageable już go zawiera
+        query.with(pageable);
         List<TheWallet> list = mongoTemplate.find(query, TheWallet.class);
 
         return PageableExecutionUtils.getPage(list, pageable,
-                () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), TheWallet.class));
-        // // Wykonuje finalne zapytanie do bazy MongoDB
+                () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), PortfolioStrategy.class));
     }
 
-    private Sort sort(List<SortDTO> sortBy) {
-        // 1. Jeśli lista jest pusta, zwracamy domyślne sortowanie
-        if (sortBy == null || sortBy.isEmpty()) {
-            return walletFilter.sortByLatestTradeDate();
-        }
-
-        Sort finalSort = null;
-
-        // 2. Iterujemy po liście i wyciągamy Stringa do switcha
-        for (SortDTO dto : sortBy) {
-            String key = dto.getField() + "_" + dto.getDirection();
-            Sort currentSort = switch (key) {
-                case "Earliest date" -> walletFilter.sortByEarliestTradeDate();
-                case "Max quantity"   -> walletFilter.sortByHighestQuantity();
-                case "Min quantity"   -> walletFilter.sortByLowestQuantity();
-                case "Max strikePrice"   -> walletFilter.sortByHighestPrice();
-                case "Min strikePrice"   -> walletFilter.sortByLowestPrice();
-                case "Earliest expiry date" -> walletFilter.sortByFastestExpiry();
-                case "Latest expiry date" -> walletFilter.sortByLatestExpiry();
-                default           -> walletFilter.sortByLatestTradeDate();
-            };
-            if (finalSort == null) {
-                finalSort = currentSort;
-            } else {
-                finalSort = finalSort.and(currentSort);
-            }
-        }
-
-        return finalSort;
-    }
-
-    public void currentPriceCheck(double currentPrice) {
-        if(currentPrice == -1)
+    public void APILimitExceededCheck(String companyTicker) {
+        double companyPrice = marketDataClient.getStockPrice(companyTicker);
+        if(companyPrice == -1)
             throw new APILimitExceededException("Probably API limit exceeded. See you tomorrow!");
     }
+/*  ---do naklepania---
+    - sprawdzenie i ewentualna zmiana statusu strategii(wykonywane codziennie na początku dnia w produkcji)
+ */
 
 }
-/*    public SpreadStrategy requested(String type, Belfort position) {
-        String formattedType = Arrays.stream(type.split("_"))
-                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
-                .collect(Collectors.joining("_"));
-        try {
-            Class<? extends SpreadStrategy> clazz = StrategyType.valueOf(formattedType).getStrategyClass();
-            return clazz.getConstructor(String.class, Belfort.class)
-                    .newInstance(formattedType.replace("_", " "), position);
-
-        } catch (Exception e) {
-            throw new RuntimeException("We couldn't manage to initialize your strategy: " + type);
-        }
-    }*/
+//metody w kolejności wywoływania

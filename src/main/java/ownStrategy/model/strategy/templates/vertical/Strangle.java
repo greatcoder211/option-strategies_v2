@@ -1,7 +1,7 @@
 package ownStrategy.model.strategy.templates.vertical;
 
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.dto.strategyPanel.Request;
+import ownStrategy.exception.ChronologyException;
+import ownStrategy.exception.SpreadException;
 import ownStrategy.model.OptionLeg;
 import ownStrategy.dto.OptionType;
 import ownStrategy.model.Belfort;
@@ -13,26 +13,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Strangle extends NamedStrategy {
-    private final int quantity;
-    private final Belfort position;
     private final String strategyName;
     private final VerticalStructure verticalStructure = new VerticalStructure();
     private final double spreadValue;
-    private final List<LocalDate> tradeDates;
-    private final List<LocalDate> expiryDates;
 
     public Strangle(int quantity, Belfort position, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
-        this.quantity = quantity;
-        super.quantity = quantity;
-        this.position = position;
-        this.strategyName = this.position.equals(Belfort.BUY) ? "Long Strangle" : "Short Strangle";
-        super.optionLegs = generateLegs(spotPrice);
+        super(quantity, position);
         this.spreadValue = spreadValue;
-        this.tradeDates = verticalStructure.setTradeDates(List.of(tradeDate), 1);
-        this.expiryDates = verticalStructure.setExpiryDates(List.of(expiryDate), 1);;
+        validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
+        this.strategyName = this.position.equals(Belfort.BUY) ? "Long Strangle" : "Short Strangle";
+        super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List <OptionLeg> generateLegs(double spotPrice){
+    @Override
+    public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
+        //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
+        if(spreadValue <= 0 || spreadValue > spotPrice){
+            throw new SpreadException("Wrong spread value. Try again.");
+        }
+        //expiryDate musi być za tradeDate
+        if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
+            throw new ChronologyException("The expiry date should be after the trade date.");
+        }
+        //anything else?
+    }
+
+    @Override
+    public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates){
         List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadValue));
         List <OptionLeg> legs = new ArrayList<>();
         if(this.position.equals(Belfort.BUY)){
@@ -45,11 +52,5 @@ public class Strangle extends NamedStrategy {
         }
         return legs;
     }
-
-    @Override
-    public List<ChartPoint> calculatePreviewChart(Request request){
-
-    }
-
 }
 

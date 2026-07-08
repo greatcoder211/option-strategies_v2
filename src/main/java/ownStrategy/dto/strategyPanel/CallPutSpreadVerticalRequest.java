@@ -6,7 +6,7 @@ import java.time.LocalDate;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public abstract class CallPutSpreadVerticalRequest extends Request {
+public abstract class CallPutSpreadVerticalRequest extends CallPutSpreadRequest {
     OptionType optionType;
     double spreadValue;
     LocalDate tradeDate;

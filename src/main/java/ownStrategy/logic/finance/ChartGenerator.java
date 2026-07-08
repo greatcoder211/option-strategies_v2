@@ -2,7 +2,10 @@ package ownStrategy.logic.finance;
 
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import ownStrategy.config.DefaultPricingContext;
 import ownStrategy.dto.ChartPoint;
+import ownStrategy.model.OptionLeg;
+import ownStrategy.model.PricingContext;
 import ownStrategy.model.strategy.OptionStrategy;
 
 import javax.swing.text.html.Option;
@@ -11,18 +14,18 @@ import java.util.List;
 @NoArgsConstructor(force = true)
 @Component
 public class ChartGenerator {
-    private OptionCalculator optionCalculator;
-    public ChartGenerator(OptionCalculator optionCalculator) {
-        this.optionCalculator = optionCalculator;
+    private final DefaultPricingContext defaultPricingContext;
+    public ChartGenerator(DefaultPricingContext defaultPricingContext) {
+        this.defaultPricingContext = defaultPricingContext;
     }
-    public List<ChartPoint> draw(double spotPrice, OptionStrategy optionStrategy) {
+    public List<ChartPoint> draw(double spotPrice, List<OptionLeg> optionLegs) {
         List <ChartPoint> chartPoints = new ArrayList<>();
-        double bottom = 0.8 * optionStrategy.getOptionLegs().get(0).strikePrice();
-        double top = 1.2 * optionStrategy.getOptionLegs().get(optionStrategy.getOptionLegs().size() - 1).strikePrice();
+        double bottom = 0.8 * optionLegs.get(0).strikePrice();
+        double top = 1.2 * optionLegs.get(optionLegs.size() - 1).strikePrice();
         double totalRange = top - bottom;
         for(int i = 0; i < 100; i++){
             double pricePoint = bottom + totalRange * i / 100;
-            chartPoints.add(new ChartPoint(pricePoint, optionCalculator.function(spotPrice, pricePoint, optionStrategy)));
+            chartPoints.add(new ChartPoint(pricePoint, StrategyCalculator.calculatePnL(optionLegs, spotPrice, pricePoint, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()))));
         }
         return chartPoints;
     }

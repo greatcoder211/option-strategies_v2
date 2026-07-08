@@ -5,6 +5,6 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 @ConfigurationProperties("strategy.pagination")
-public class StrategiesPage {
+public class Pagesize {
     private int pageSize = 10;
 }

@@ -10,13 +10,4 @@ public class DiagonalStructure implements SpreadStructure{
         return List.of();
     }
 
-    @Override
-    public List<LocalDate> setTradeDates(List<LocalDate> tradeDates, int spreadNumber) {
-        return tradeDates;
-    }
-
-    @Override
-    public List<LocalDate> setExpiryDates(List<LocalDate> expiryDates, int spreadNumber) {
-        return expiryDates;
-    }
 }
