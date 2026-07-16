@@ -1,34 +1,31 @@
 package ownStrategy.logic.mapper;
 
-import org.springframework.stereotype.Component;
-import ownStrategy.dto.strategyPanel.Request;
-import ownStrategy.model.strategy.OptionStrategy;
+import org.mapstruct.Mapper;
+import org.springframework.data.domain.Page;
+import ownStrategy.dto.criteria.FilterDTO;
+import ownStrategy.dto.portfolio.PortfolioStrategyDTO;
+import ownStrategy.dto.request.RequestDTO;
+import ownStrategy.model.entity.criteria.Filter;
+import ownStrategy.model.entity.portfolio.PortfolioStrategy;
+import ownStrategy.model.entity.portfolio.Request;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
-@Component
-public class StrategyMapper {
+@Mapper(componentModel = "spring")
+public interface StrategyMapper {
+    Request toEntity(RequestDTO dto);
+    PortfolioStrategy toEntity(PortfolioStrategyDTO dto);
+    PortfolioStrategyDTO toDto(PortfolioStrategy entity);
+    Filter toEntity(FilterDTO dto);
+    FilterDTO toDto(Filter entity);
+    Optional<PortfolioStrategyDTO> toDto(Optional<PortfolioStrategy> entity);
 
-    //request -> fabryka, która umie go obsługiwać
-    private final Map<Class<? extends Request>, StrategyFactory<? extends Request>> registry = new HashMap<>();
-
-    // wstrzykiwanie listy wszystkich fabryk
-    public StrategyMapper(List<StrategyFactory<?>> factories) {
-        for (StrategyFactory<?> factory : factories) {
-            registry.put(factory.getSupportedType(), factory);
+    default Page<PortfolioStrategyDTO> toDtoPage(Page<PortfolioStrategy> entityPage) {
+        if (entityPage == null) {
+            return null;
         }
+        return entityPage.map(this::toDto);
     }
-
-    @SuppressWarnings("unchecked")
-    public OptionStrategy mapToDomain(Request request) {
-        StrategyFactory<Request> factory = (StrategyFactory<Request>) registry.get(request.getClass());
-
-        if (factory == null) {
-            throw new IllegalArgumentException("Unsupported strategy type: " + request.getClass().getSimpleName());
-        }
-
-        return factory.create(request);
-    }
+    List<PortfolioStrategyDTO> toDtoList(List<PortfolioStrategy> entities);
 }

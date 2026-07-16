@@ -44,7 +44,7 @@ public class GreatExceptionHandler {
     }
 
 
-    @ExceptionHandler({QuantityException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> quantityExceptions(Exception ex) {
         Map<String, String> errors = new HashMap<>();
@@ -71,7 +71,7 @@ public class GreatExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Map<String, String> handleBadCredentials(BadCredentialsException ex) {
+    public Map<String, String> handleBadCredentials() {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", "Invalid username or password");
         errors.put("code", "AUTH_FAILED");
@@ -80,7 +80,7 @@ public class GreatExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Map<String, String> handleAccessDenied(AccessDeniedException ex) {
+    public Map<String, String> handleAccessDenied() {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", "You do not have permission to access this resource");
         errors.put("code", "ACCESS_DENIED");

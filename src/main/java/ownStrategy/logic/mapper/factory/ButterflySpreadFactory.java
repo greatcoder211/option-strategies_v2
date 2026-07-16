@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper.factory;
 import org.springframework.stereotype.Component;
-import ownStrategy.dto.strategyPanel.ButterflySpreadRequest;
+import ownStrategy.dto.request.ButterflySpreadRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.vertical.ButterflySpread;

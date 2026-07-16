@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import ownStrategy.dto.CompanyDTO;
+import ownStrategy.model.entity.portfolio.Company;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +20,7 @@ public class SearchHistory {
     private String keyword;
     private LocalDateTime date;
     private int resultsCount;
-    private List<CompanyDTO> companies;
+    private List<Company> companies;
     public SearchHistory(String keyword, int resultsCount) {
         this.keyword = keyword;
         this.resultsCount = resultsCount;

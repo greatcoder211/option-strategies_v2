@@ -1,10 +1,10 @@
 package ownStrategy.model.strategy.templates.horizontal;
 
-import ownStrategy.dto.OptionType;
+import ownStrategy.model.OptionType;
 import ownStrategy.exception.ChronologyException;
 import ownStrategy.exception.StrikePriceException;
 import ownStrategy.model.Belfort;
-import ownStrategy.model.OptionLeg;
+import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
 import ownStrategy.model.structure.HorizontalStructure;

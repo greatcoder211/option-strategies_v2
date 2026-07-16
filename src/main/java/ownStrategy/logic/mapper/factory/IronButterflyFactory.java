@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.strategyPanel.IronButterflyRequest;
+import ownStrategy.dto.request.IronButterflyRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.vertical.IronButterfly;

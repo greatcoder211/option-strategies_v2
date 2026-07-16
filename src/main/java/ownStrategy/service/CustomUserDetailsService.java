@@ -1,11 +1,8 @@
 package ownStrategy.service;
-
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import ownStrategy.dto.UserDTO;
 import ownStrategy.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

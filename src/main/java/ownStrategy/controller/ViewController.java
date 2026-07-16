@@ -2,6 +2,7 @@ package ownStrategy.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+//controller widoków statycznych
 @Controller
 public class ViewController {
     @GetMapping("/strategy")

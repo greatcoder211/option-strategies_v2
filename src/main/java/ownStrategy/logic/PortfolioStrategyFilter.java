@@ -1,35 +1,15 @@
 package ownStrategy.logic;
 
-import com.mongodb.lang.Nullable;
-import jakarta.validation.constraints.Positive;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Component;
-import ownStrategy.dto.Company;
-import ownStrategy.dto.OptionType;
-import ownStrategy.dto.Status;
-import ownStrategy.dto.StrategySort;
-import ownStrategy.model.Belfort;
-import ownStrategy.model.OptionLeg;
+import ownStrategy.model.entity.criteria.StrategySort;
 
 import java.time.LocalDate;
 import java.util.List;
 @Component
 public class PortfolioStrategyFilter {
-    private LocalDate createdAt;
-    @Positive
-    private int quantity;
-    private Belfort position;
-    @Nullable
-    private OptionType optionType;
-    private String strategyName;
-    private Company company;
-    //Double, by odpowiednio opakować to nullem w przypadku strategii "na później"
-    private Double spotPrice;
-    private List<OptionLeg> optionLegs;
-    //OPEN, CLOSE, PENDING
-    private Status status;
 
     public Criteria filterByCreatedAtRange(LocalDate createdAtFrom, LocalDate createdAtTo) {
         if (createdAtFrom == null && createdAtTo == null) {
@@ -43,9 +23,9 @@ public class PortfolioStrategyFilter {
     }
 
     public Criteria filterByPosition(String position) {
-        if (("BUY").equals(optionType)) {
+        if (("BUY").equals(position)) {
             return Criteria.where("position").is("BUY");
-        } else if (("SELL").equals(optionType)) {
+        } else if (("SELL").equals(position)) {
             return Criteria.where("position").is("SELL");
         } else return new Criteria();
     }
@@ -153,57 +133,6 @@ public class PortfolioStrategyFilter {
                 finalSort = finalSort.and(currentSort);
             }
         }
-
         return finalSort;
-    }
-
-    private Sort mapSingleSort(String sortBy) {
-        if (sortBy == null || sortBy.trim().isEmpty()) {
-            return Sort.unsorted();
-        }
-        return switch (sortBy) {
-            case "lowestQuantity" -> sortByLowestQuantity();
-            case "highestQuantity" -> sortByHighestQuantity();
-            case "lowestSpotPrice" -> sortByLowestSpotPrice();
-            case "highestSpotPrice" -> sortByHighestSpotPrice();
-            case "earliestTradeDate" -> sortByEarliestTradeDate();
-            case "latestTradeDate" -> sortByLatestTradeDate();
-            case "earliestExpiryDate" -> sortByEarliestExpiryDate();
-            case "latestExpiryDate" -> sortByLatestExpiryDate();
-            //pusty sort- dla nierozpoznanych
-            default -> Sort.unsorted();
-        };
-    }
-
-    private Sort sortByLowestQuantity() {
-        return Sort.by(Sort.Direction.ASC, "quantity");
-    }
-
-    private Sort sortByHighestQuantity() {
-        return Sort.by(Sort.Direction.DESC, "quantity");
-    }
-
-    private Sort sortByLowestSpotPrice() {
-        return Sort.by(Sort.Direction.ASC, "spotPrice");
-    }
-
-    private Sort sortByHighestSpotPrice() {
-        return Sort.by(Sort.Direction.DESC, "spotPrice");
-    }
-
-    private Sort sortByEarliestTradeDate() {
-        return Sort.by(Sort.Direction.ASC, "optionLegs.tradeDate"); // Poprawione L
-    }
-
-    private Sort sortByLatestTradeDate() {
-        return Sort.by(Sort.Direction.DESC, "optionLegs.tradeDate"); // Poprawione L
-    }
-
-    private Sort sortByEarliestExpiryDate() {
-        return Sort.by(Sort.Direction.ASC, "optionLegs.expiryDate"); // Dodana ścieżka
-    }
-
-    private Sort sortByLatestExpiryDate() {
-        return Sort.by(Sort.Direction.DESC, "optionLegs.expiryDate"); // Dodana ścieżka
     }
 }

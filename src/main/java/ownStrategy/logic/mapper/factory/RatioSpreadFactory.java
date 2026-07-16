@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.strategyPanel.RatioSpreadRequest;
+import ownStrategy.dto.request.RatioSpreadRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.asymmetrical.RatioSpread;

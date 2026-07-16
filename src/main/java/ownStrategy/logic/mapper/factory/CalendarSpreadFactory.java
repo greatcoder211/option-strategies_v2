@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.strategyPanel.CalendarSpreadRequest;
+import ownStrategy.dto.request.CalendarSpreadRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.horizontal.CalendarSpread;

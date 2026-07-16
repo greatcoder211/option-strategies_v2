@@ -10,10 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -27,11 +24,11 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private Set<String> roles;
-    public User(String username, String email, String password, Set<String> roles) {
+    public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.roles = roles;
+        this.roles = new HashSet<>(Set.of("USER"));
     }
 
     @Override

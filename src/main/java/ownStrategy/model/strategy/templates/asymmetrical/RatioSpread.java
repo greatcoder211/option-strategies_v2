@@ -1,11 +1,9 @@
 package ownStrategy.model.strategy.templates.asymmetrical;
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.dto.strategyPanel.Request;
 import ownStrategy.exception.ChronologyException;
 import ownStrategy.exception.SpreadException;
 import ownStrategy.model.Belfort;
-import ownStrategy.model.OptionLeg;
-import ownStrategy.dto.OptionType;
+import ownStrategy.model.entity.portfolio.OptionLeg;
+import ownStrategy.model.OptionType;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
 import ownStrategy.model.structure.AsymmetricalStructure;

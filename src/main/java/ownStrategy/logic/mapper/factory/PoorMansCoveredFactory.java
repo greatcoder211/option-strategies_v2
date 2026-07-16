@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.strategyPanel.PoorMansCoveredRequest;
+import ownStrategy.dto.request.PoorMansCoveredRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.diagonal.PoorMansCovered;

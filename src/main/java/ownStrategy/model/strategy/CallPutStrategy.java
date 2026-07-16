@@ -1,6 +1,6 @@
 package ownStrategy.model.strategy;
 
-import ownStrategy.dto.OptionType;
+import ownStrategy.model.OptionType;
 
 public interface CallPutStrategy {
     OptionType getOptionType();

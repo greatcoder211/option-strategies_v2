@@ -1,6 +1,6 @@
 package ownStrategy.logic.mapper;
 
-import ownStrategy.dto.strategyPanel.Request;
+import ownStrategy.model.entity.portfolio.Request;
 import ownStrategy.model.strategy.OptionStrategy;
 
 public interface StrategyFactory<T extends Request> {

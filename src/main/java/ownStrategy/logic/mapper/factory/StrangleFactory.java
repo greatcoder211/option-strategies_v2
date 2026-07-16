@@ -1,9 +1,8 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.strategyPanel.StrangleRequest;
+import ownStrategy.dto.request.StrangleRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
-import ownStrategy.model.strategy.templates.asymmetrical.RatioSpread;
 import ownStrategy.model.strategy.templates.vertical.Strangle;
 
 public class StrangleFactory implements StrategyFactory<StrangleRequest> {

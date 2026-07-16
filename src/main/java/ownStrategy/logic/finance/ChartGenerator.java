@@ -3,12 +3,10 @@ package ownStrategy.logic.finance;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 import ownStrategy.config.DefaultPricingContext;
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.model.OptionLeg;
+import ownStrategy.model.entity.portfolio.ChartPoint;
+import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.PricingContext;
-import ownStrategy.model.strategy.OptionStrategy;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
 @NoArgsConstructor(force = true)

@@ -1,7 +1,7 @@
 package ownStrategy.logic.mapper.factory;
 
 import org.springframework.stereotype.Component;
-import ownStrategy.dto.strategyPanel.IronCondorRequest;
+import ownStrategy.dto.request.IronCondorRequest;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.vertical.IronCondor;

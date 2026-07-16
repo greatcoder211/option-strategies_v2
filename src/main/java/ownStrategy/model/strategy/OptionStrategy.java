@@ -2,16 +2,10 @@ package ownStrategy.model.strategy;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import ownStrategy.dto.ChartPoint;
-import ownStrategy.dto.strategyPanel.Request;
-import ownStrategy.logic.finance.BlackScholesUtils;
-import ownStrategy.model.OptionLeg;
-import ownStrategy.dto.OptionType;
+import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.Belfort;
-import ownStrategy.model.PricingContext;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 @Data
 public abstract class OptionStrategy {

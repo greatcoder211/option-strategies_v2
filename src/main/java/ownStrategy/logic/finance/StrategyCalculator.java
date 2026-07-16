@@ -1,8 +1,8 @@
 package ownStrategy.logic.finance;
 
-import ownStrategy.dto.OptionType;
+import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
-import ownStrategy.model.OptionLeg;
+import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.PricingContext;
 
 import java.time.temporal.ChronoUnit;

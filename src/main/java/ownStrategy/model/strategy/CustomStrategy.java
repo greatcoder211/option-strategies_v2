@@ -1,6 +1,6 @@
 package ownStrategy.model.strategy;
 
-import ownStrategy.model.OptionLeg;
+import ownStrategy.model.entity.portfolio.OptionLeg;
 
 import java.time.LocalDate;
 import java.util.List;
