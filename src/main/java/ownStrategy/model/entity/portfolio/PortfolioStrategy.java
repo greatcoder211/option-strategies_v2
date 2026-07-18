@@ -22,7 +22,7 @@ public class PortfolioStrategy {
     private String portfolioStrategyID;
     //userID to de facto ID całego portfolio(bo jeden user może mieć tylko jedno portfolio, czyli listę strategii PortfolioStrategy)
     @Indexed
-    private String userID;
+    private String userId;
     @Positive
     private int quantity;
     private Belfort position;

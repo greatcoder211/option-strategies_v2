@@ -96,8 +96,9 @@ public class StrategyService {
     }
 
     public List<PortfolioStrategy> getPortfolioByUsername(String username) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            return strategyRepository.findByUsername(username);
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            return strategyRepository.findByUserId(user.get().getId());
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + username);
         }

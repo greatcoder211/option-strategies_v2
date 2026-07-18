@@ -10,8 +10,10 @@ public class StrategyScheduler {
     public StrategyScheduler(StrategyService strategyService) {
         this.strategyService = strategyService;
     }
-    @Scheduled
+//    @PatchMapping metody schedulera działają w tle, nie obsługują żądań http
+//    @Scheduled(cron = "0 0 12 * * *") codziennie o dwunastej: (sekunda minuta godzina dzień miesiąca miesiąc dzień tygodnia)
+    @Scheduled(cron = "@daily")
     public void closeExpired() {
-        strategyService.closeExpiredStrategies();
-    }
+            strategyService.closeExpiredStrategies();
+        }
 }

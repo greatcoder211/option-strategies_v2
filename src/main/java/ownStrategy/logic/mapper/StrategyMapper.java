@@ -19,13 +19,13 @@ public interface StrategyMapper {
     PortfolioStrategyDTO toDto(PortfolioStrategy entity);
     Filter toEntity(FilterDTO dto);
     FilterDTO toDto(Filter entity);
-    Optional<PortfolioStrategyDTO> toDto(Optional<PortfolioStrategy> entity);
+
+    default Optional<PortfolioStrategyDTO> toDtoOptional(Optional<PortfolioStrategy> entity) {
+        return entity == null ? null : entity.map(portfolioStrategy -> toDto(portfolioStrategy));
+    }
 
     default Page<PortfolioStrategyDTO> toDtoPage(Page<PortfolioStrategy> entityPage) {
-        if (entityPage == null) {
-            return null;
-        }
-        return entityPage.map(this::toDto);
+        return entityPage == null ? null : entityPage.map(this::toDto);
     }
     List<PortfolioStrategyDTO> toDtoList(List<PortfolioStrategy> entities);
 }

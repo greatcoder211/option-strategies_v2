@@ -74,12 +74,12 @@ public class StrategyController {
         return strategyMapper.toDtoList(strategyService.getAllPortfolios());
     }
 
-    @GetMapping("/strategy/get/{strategyId}")
+    @GetMapping("/strategy/get/id/{strategyId}")
     public Optional<PortfolioStrategyDTO> getStrategyByStrategyId(@PathVariable String strategyId){
-        return strategyMapper.toDto(strategyService.getStrategyByStrategyId(strategyId));
+        return strategyMapper.toDtoOptional(strategyService.getStrategyByStrategyId(strategyId));
     }
 
-    @GetMapping("/strategy/get/{username}")
+    @GetMapping("/portfolio/get/username/{username}")
     public List<PortfolioStrategyDTO> getPortfolioByUsername(@PathVariable String username){
         return strategyMapper.toDtoList(strategyService.getPortfolioByUsername(username));
     }

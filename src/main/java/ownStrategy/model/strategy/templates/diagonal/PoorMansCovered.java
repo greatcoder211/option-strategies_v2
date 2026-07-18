@@ -16,14 +16,18 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     //long powyżej i short poniżej long takze pozniej, a short- krocej(od dzisiaj)
-    private final List<Double> strikePrices;
     private final DiagonalStructure diagonalStructure = new DiagonalStructure();
+    private final List<Double> strikePrices;
+    private final LocalDate shortExpiryDate;
+    private final LocalDate longExpiryDate;
+
     //z logiki musi wynikać, że tradeDate równe heute, ale trzeba przekazać mu i tak do konstruktora
     //two expiry: short/long expiry
-    public PoorMansCovered(int quantity, Belfort position, OptionType optionType, List<Double> strikePrices, LocalDate tradeDate, List<LocalDate> expiryDates, double spotPrice) {
+    public PoorMansCovered(int quantity, Belfort position, OptionType optionType, List<Double> strikePrices,
+                           LocalDate tradeDate, LocalDate shortExpiryDate, LocalDate longExpiryDate, double spotPrice) {
         super(quantity, position);
         this.strikePrices = strikePrices;
-        validateData(spotPrice, List.of(tradeDate),  expiryDates);
+        validateData(spotPrice, List.of(tradeDate),  List.of(shortExpiryDate, longExpiryDate));
         this.optionType = optionType;
         if(this.optionType.equals(OptionType.CALL)){
             this.strategyName = "Poor Man's Covered Call";
@@ -32,8 +36,11 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
             this.strategyName = "Poor Man's Covered Put";
         }
         else throw new IllegalArgumentException("Invalid option type. Either CALL or PUT");
-        super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), expiryDates);
+        this.shortExpiryDate = shortExpiryDate;
+        this.longExpiryDate = longExpiryDate;
+        super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(shortExpiryDate, longExpiryDate));
     }
+
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         Collections.sort(strikePrices);
@@ -68,6 +75,9 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
             if(!expiryDate.isAfter(tradeDates.get(0))){
                 throw new ChronologyException("The expiry date should be after the trade date.");
             }
+        }
+        if(expiryDates.get(0).equals(expiryDates.get(1))){
+            throw new ChronologyException("The expiry dates cannot be equals in this strategy.");
         }
     }
 

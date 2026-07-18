@@ -14,12 +14,11 @@ public class RatioSpreadFactory implements StrategyFactory<RatioSpreadRequest> {
                 request.getPosition(),
                 request.getOptionType(),
                 request.getSpreadValue(),
+                request.getSpotPrice(),
                 request.getTradeDate(),
-                request.getExpiryDate(),
-                request.getSpotPrice()
+                request.getExpiryDate()
         );
     }
-
     @Override
     public Class<RatioSpreadRequest> getSupportedType() {
         return RatioSpreadRequest.class;

@@ -20,24 +20,24 @@ public class CalendarSpread extends NamedStrategy implements CallPutStrategy {
     private final double strikePrice;
     private final HorizontalStructure horizontalStructure = new HorizontalStructure();
     //z logiki musi wynikać, że tradeDate równe heute, ale trzeba przekazać mu i tak do konstruktora
-    public CalendarSpread(int quantity, Belfort position, OptionType optionType, double strikePrice, LocalDate tradeDate, List<LocalDate> expiryDates, double spotPrice) {
+    public CalendarSpread(int quantity, Belfort position, OptionType optionType, double strikePrice, LocalDate tradeDate, LocalDate shortExpiryDate, LocalDate longExpiryDate, double spotPrice) {
         super(quantity, position);
         this.strikePrice = strikePrice;
-        validateData(spotPrice, List.of(tradeDate), expiryDates);
+        validateData(spotPrice, List.of(tradeDate), List.of(shortExpiryDate, longExpiryDate));
         this.optionType = optionType;
-        if(ChronoUnit.DAYS.between(tradeDate, expiryDates.get(0)) == 7 && ChronoUnit.DAYS.between(tradeDate, expiryDates.get(1)) == 14){
+        if(ChronoUnit.DAYS.between(tradeDate, shortExpiryDate) == 7 && ChronoUnit.DAYS.between(tradeDate, longExpiryDate) == 14){
             this.strategyName = "Weekly ".concat(getStrategyNameSnippet()).concat("Calendar Spread");
         }
-        else if(ChronoUnit.DAYS.between(tradeDate, expiryDates.get(0)) == 30 && ChronoUnit.DAYS.between(tradeDate, expiryDates.get(1)) == 60){
+        else if(ChronoUnit.DAYS.between(tradeDate, shortExpiryDate) == 30 && ChronoUnit.DAYS.between(tradeDate, longExpiryDate) == 60){
             this.strategyName = "Standard ".concat(getStrategyNameSnippet()).concat("Calendar Spread");
         }
-        else if(ChronoUnit.DAYS.between(tradeDate, expiryDates.get(0)) == 30 && ChronoUnit.DAYS.between(tradeDate, expiryDates.get(1)) == 365){
+        else if(ChronoUnit.DAYS.between(tradeDate, shortExpiryDate) == 30 && ChronoUnit.DAYS.between(tradeDate, longExpiryDate) == 365){
             this.strategyName = "LEAPS ".concat(getStrategyNameSnippet()).concat("Calendar Spread");
         }
         else{
             this.strategyName = getStrategyNameSnippet().concat("Calendar Spread");
         }
-        super.optionLegs = this.generateLegs(spotPrice, List.of(tradeDate), expiryDates);
+        super.optionLegs = this.generateLegs(spotPrice, List.of(tradeDate), List.of(shortExpiryDate, longExpiryDate));
     }
 
     public String getStrategyNameSnippet(){

@@ -16,7 +16,7 @@ import java.time.Duration;
 public class AlphaVantageClient implements MarketDataClient {
 
 
-    private static final String API_KEY = "R875E3J67YS7G93S";
+    private static final String API_KEY = "${ALPHAVANTAGE_API_KEY}";
 
     // HttpClient jest thread-safe, trzymamy jedną instancję (optymalizacja)
     private final HttpClient client = HttpClient.newBuilder()
@@ -45,12 +45,12 @@ public class AlphaVantageClient implements MarketDataClient {
 
             JsonNode globalQuote = rootNode.path("Global Quote");
 
-            if (globalQuote.isMissingNode()||!globalQuote.has("05. strikePrice")) {
+            if (globalQuote.isMissingNode()||!globalQuote.has("05. price")) {
                 System.err.println("API ROW RESPONSE: " + jsonResponse);
                 return -1.0;
             }
 
-            String priceStr = globalQuote.get("05. strikePrice").asText();
+            String priceStr = globalQuote.get("05. price").asText();
             return Double.parseDouble(priceStr);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

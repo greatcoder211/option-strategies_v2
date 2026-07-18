@@ -2,92 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Belfort Strategy Lab</title>
+    <title>Belfort Strategy Lab - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .chart-container { min-height: 500px; position: relative; width: 100%; }
-        .invalid-feedback { display: none; color: #dc3545; font-weight: 500; }
-        .is-invalid ~ .invalid-feedback { display: block; }
-        .is-invalid { border-color: #dc3545 !important; }
-        select:disabled { background-color: #e9ecef !important; cursor: not-allowed; color: #6c757d; }
-        .spread-label { font-size: 0.85rem; color: #6c757d; font-weight: 500; display: block; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-brand { font-weight: 800; letter-spacing: 1px; }
+
+        /* Karty layoutu */
+        .glass-card {
+            background: #ffffff; border: none; border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05); padding: 1.5rem; margin-bottom: 1.5rem;
+        }
+
+        /* Proporcje po prawej stronie */
+        .right-panel { display: flex; flex-direction: column; height: 100%; }
+        .chart-section { flex: 2; min-height: 400px; margin-bottom: 1rem; position: relative; }
+        .action-section { flex: 1; display: flex; flex-direction: column; justify-content: space-between; background: #f8f9fa; border-radius: 12px; padding: 1.5rem; border: 1px solid #e9ecef; }
+
+        .btn-play { font-size: 1.1rem; letter-spacing: 0.5px; text-transform: uppercase; border-radius: 10px; transition: all 0.3s ease; }
+        .btn-play:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(25, 135, 84, 0.4); }
+
+        /* Styl portfolio */
+        .portfolio-item {
+            border-left: 4px solid #0d6efd; background: #fff; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 10px; padding: 1rem;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .portfolio-item:hover { transform: scale(1.01); }
+        .leg-details { font-size: 0.85rem; color: #6c757d; }
+
+        /* Efekt animacji dodawania do portfolio */
+        @keyframes flyToPortfolio {
+            0% { transform: scale(1); opacity: 1; top: 0; left: 0; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: translate(-50vw, 50vh) scale(0.1); opacity: 0; }
+        }
+        .flying-element { position: fixed; z-index: 9999; animation: flyToPortfolio 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; }
     </style>
 </head>
-<body class="bg-light" onload="init()">
+<body onload="initDashboard()">
 
-<div class="container-fluid py-4">
-    <div class="row px-3">
-        <div class="col-md-3">
-            <div class="card p-4">
-                <h4 class="mb-4 fw-bold text-primary">Strategy Config</h4>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand text-primary" href="#">BELFORT LAB</a>
+        <div class="d-flex align-items-center">
+            <span class="text-light me-3 fw-semibold" id="nav-username">User XYZ</span>
+            <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </div>
+</nav>
 
-                <div class="mb-3">
-                    <label for="keyInput" class="form-label fw-semibold">Company Search</label>
-                    <input type="text" id="keyInput" class="form-control" list="tickerOptions"
-                           placeholder="Type e.g. 'apple'..." oninput="handleSearch(this.value)">
-                    <datalist id="tickerOptions"></datalist>
-                </div>
+<div class="container-fluid px-4 pb-5">
+    <div class="row">
+        <!-- LEWA STRONA (2/3): Konfigurator -->
+        <div class="col-lg-8">
+            <div class="glass-card h-100">
+                <h4 class="mb-4 fw-bold text-dark">Strategy Configuration</h4>
 
-                <div class="mb-3">
-                    <label for="type" class="form-label fw-semibold">Strategy Type</label>
-                    <select id="type" class="form-select" onchange="updateStrategyUI()">
-                        <option value="butterfly_spread">Butterfly Spread</option>
-                        <option value="vertical_spread">Vertical Spread</option>
-                        <option value="iron_condor">Iron Condor</option>
-                        <option value="iron_butterfly">Iron Butterfly</option>
-                        <option value="strangle">Strangle</option>
-                        <option value="ratio_spread">Ratio Spread</option>
-                    </select>
-                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Company Search</label>
+                        <input type="text" id="ticker" class="form-control" placeholder="e.g. AAPL">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Strategy Type</label>
+                        <select id="type" class="form-select">
+                            <option value="vertical_spread">Vertical Spread</option>
+                            <option value="iron_condor">Iron Condor</option>
+                            <option value="butterfly_spread">Butterfly Spread</option>
+                        </select>
+                    </div>
 
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="pos" class="form-label fw-semibold">Direction</label>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Direction</label>
                         <select id="pos" class="form-select">
                             <option value="BUY">BUY</option>
                             <option value="SELL">SELL</option>
                         </select>
                     </div>
-                    <div class="col-6">
-                        <label for="optionType" class="form-label fw-semibold">Option Type</label>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Option Type</label>
                         <select id="optionType" class="form-select">
                             <option value="CALL">CALL</option>
                             <option value="PUT">PUT</option>
-                            <option id="naOption" value="NA" style="display:none;">NA</option>
                         </select>
                     </div>
-                </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Quantity</label>
+                        <input type="number" id="quant" class="form-control" value="1">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="quant" class="form-label fw-semibold">Quantity</label>
-                    <input type="text" id="quant" class="form-control" value="1">
-                </div>
-
-                <div id="spreads-section" class="mb-3">
-                    <div class="form-label fw-semibold">Spreads Configuration</div>
-                    <div id="spread-inputs-wrapper" class="row g-2"></div>
-                    <div id="spreads-global-error" class="text-danger mt-1 fw-bold" style="display:none; font-size: 0.85rem;">
-                        Invalid spreads. Only positive values.
+                    <div class="col-md-12 mt-4">
+                        <button onclick="previewStrategy()" class="btn btn-primary w-100 fw-bold py-2">Preview Strategy</button>
                     </div>
                 </div>
-
-                <div class="mb-4">
-                    <label for="expiry" class="form-label fw-semibold">Expiration Date</label>
-                    <input type="date" id="expiry" class="form-control" value="2026-05-16">
-                </div>
-
-                <button onclick="calculate()" class="btn btn-primary w-100 fw-bold py-2">Calculate Strategy</button>
             </div>
         </div>
 
-        <div class="col-md-9">
-            <div class="card p-4 h-100">
-                <h2 id="strategy-title" class="text-center mb-4">Interactive Analysis</h2>
-                <div class="chart-container">
-                    <canvas id="myChart"></canvas>
+        <!-- PRAWA STRONA (1/3): Wykres i Akcja -->
+        <div class="col-lg-4">
+            <div class="right-panel">
+                <!-- Góra (2/3): Wykres -->
+                <div class="glass-card chart-section" id="chart-container-card">
+                    <h5 id="strategy-title" class="text-center fw-bold mb-3">Chart Preview</h5>
+                    <canvas id="strategyChart"></canvas>
+                </div>
+
+                <!-- Dół (1/3): Parametry i przycisk Zagraj -->
+                <div class="action-section" id="execute-section">
+                    <div>
+                        <h6 class="fw-bold text-secondary mb-3">Key Parameters</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Est. Max Profit:</span>
+                            <span class="fw-bold text-success">Calculated on execution</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Est. Max Loss:</span>
+                            <span class="fw-bold text-danger">Calculated on execution</span>
+                        </div>
+                    </div>
+                    <button onclick="executeStrategy()" class="btn btn-success btn-play w-100 py-3 mt-3 fw-bold">
+                        Execute Strategy (Zagraj)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEKCJA PORTFOLIO UŻYTKOWNIKA -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="glass-card">
+                <h4 class="mb-4 fw-bold" id="portfolio-title">Portfolio: User XYZ</h4>
+                <div id="portfolio-list" class="row">
+                    <!-- Lista ładowana dynamicznie przez JS -->
                 </div>
             </div>
         </div>
@@ -96,127 +145,159 @@
 
 <script>
     let myChart = null;
-    let lastSearchKey = "";
+    let currentPreviewRequest = null;
+    let jwtToken = localStorage.getItem('jwt');
+    let username = localStorage.getItem('username');
 
-    function init() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('expiry').setAttribute('min', today);
-        updateStrategyUI();
+    // Inicjalizacja widoku
+    function initDashboard() {
+        if (!jwtToken) {
+            window.location.href = 'auth.html';
+            return;
+        }
+        document.getElementById('nav-username').innerText = username;
+        document.getElementById('portfolio-title').innerText = `Portfolio: ${username}`;
+        loadPortfolio();
     }
 
-    async function updateStrategyUI() {
-        const strategyType = document.getElementById('type').value;
-        const optSelect = document.getElementById('optionType');
-        const naOption = document.getElementById('naOption');
-        const wrapper = document.getElementById('spread-inputs-wrapper');
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'auth.html';
+    }
 
-        // Reguły lokalne (fallback jeśli metadane nie odpowiedzą)
-        let isCP = !strategyType.includes("iron") && !strategyType.includes("strangle");
-        let spreadCount = (strategyType.includes("iron") || strategyType.includes("butterfly")) ? 2 : 1;
+    // Dodawanie tokenu JWT do zapytań
+    const authHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwtToken}`
+    };
+
+    // Podgląd strategii (Preview) przed zagraniem[cite: 1]
+    async function previewStrategy() {
+        currentPreviewRequest = {
+            companyTicker: document.getElementById('ticker').value.toUpperCase(),
+            strategyType: document.getElementById('type').value,
+            direction: document.getElementById('pos').value,
+            optionType: document.getElementById('optionType').value,
+            quantity: parseInt(document.getElementById('quant').value)
+        };
 
         try {
-            const res = await fetch(`/api/strategy-metadata/${strategyType}`);
-            if (res.ok) {
-                const meta = await res.json();
-                isCP = (meta.isCP !== undefined) ? meta.isCP : meta.cp;
-                spreadCount = meta.spreadNumber;
-            }
-        } catch (e) { console.warn("Using local UI rules."); }
-
-        if (!isCP) {
-            naOption.style.display = "block";
-            optSelect.value = "NA";
-            optSelect.disabled = true;
-        } else {
-            naOption.style.display = "none";
-            if (optSelect.value === "NA") optSelect.value = "CALL";
-            optSelect.disabled = false;
-        }
-
-        // Generowanie pól z ID i Label (Naprawa zdjęć c71a3c/c71a90)
-        wrapper.innerHTML = "";
-        const labels = ["First spread:", "Second spread:"];
-        for (let i = 0; i < spreadCount; i++) {
-            const col = document.createElement('div');
-            col.className = spreadCount > 1 ? "col-6" : "col-12";
-            col.innerHTML = `
-                <label for="spread-${i}" class="spread-label mb-1">${labels[i]}</label>
-                <input id="spread-${i}" type="text" class="form-control spread-input" value="${(i + 1) * 5}">
-            `;
-            wrapper.appendChild(col);
-        }
-    }
-
-    function handleSearch(val) {
-        if (val.length < 3) return;
-        lastSearchKey = val;
-        // Ważne: usuń ukośnik w @GetMapping w Javie
-        fetch(`/api/tickers?key=${encodeURIComponent(val)}`)
-            .then(res => res.ok ? res.json() : [])
-            .then(data => {
-                const list = document.getElementById('tickerOptions');
-                list.innerHTML = "";
-                (data || []).forEach(item => {
-                    let option = document.createElement('option');
-                    option.value = item;
-                    list.appendChild(option);
-                });
-            }).catch(e => console.error("Search failed:", e));
-    }
-
-    async function calculate() {
-        // Resetowanie błędów
-        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        document.getElementById('spreads-global-error').style.display = 'none';
-
-        const fullSelection = document.getElementById('keyInput').value;
-        const quant = parseInt(document.getElementById('quant').value);
-        const spreads = Array.from(document.querySelectorAll('.spread-input')).map(i => parseFloat(i.value.trim()));
-
-        // EKSTRAKCJA TICKERA (np. AAPL) - Zapobiega 404 w URL
-        let tickerOnly = "NONE";
-        const match = fullSelection.match(/\(([^)]+)\)$/);
-        if (match) {
-            tickerOnly = match[1];
-        } else {
-            tickerOnly = lastSearchKey || "NONE";
-        }
-
-        const dateParts = document.getElementById('expiry').value.split("-");
-        const expiryFormatted = (dateParts.length === 3) ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : "";
-
-        // Czysty URL bez spacji i nawiasów
-        const url = `/strategy/${document.getElementById('pos').value}/${document.getElementById('type').value}/${quant}/${encodeURIComponent(tickerOnly)}/${document.getElementById('optionType').value}?selection=${encodeURIComponent(fullSelection)}`;
-
-        try {
-            const response = await fetch(url, {
+            const res = await fetch('/preview', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ spreads: spreads, expiry: expiryFormatted })
+                headers: authHeaders,
+                body: JSON.stringify(currentPreviewRequest)
             });
-
-            const data = await response.json();
-            console.log("Response from server:", data); // Debug w konsoli
-
-            if (!response.ok) {
-                console.error("Server Error:", data);
-                return;
-            }
-
+            const data = await res.json();
             document.getElementById('strategy-title').innerText = data.strategyName;
             drawChart(data.chartPoints);
-        } catch (err) { console.error("Calculation failed:", err); }
+        } catch (e) {
+            console.error("Preview failed", e);
+        }
     }
 
+    // Realizacja strategii i dodanie do portfolio[cite: 1]
+    async function executeStrategy() {
+        if (!currentPreviewRequest) {
+            alert("Please preview a strategy first!");
+            return;
+        }
+
+        // Uruchomienie efektu wizualnego
+        triggerSaveAnimation();
+
+        try {
+            const res = await fetch('/execute', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(currentPreviewRequest)
+            });
+
+            if (res.ok) {
+                setTimeout(loadPortfolio, 800); // Przeładuj portfolio po zakończeniu animacji
+            }
+        } catch (e) {
+            console.error("Execution failed", e);
+        }
+    }
+
+    // Pobieranie portfolio po nazwie użytkownika[cite: 1]
+    async function loadPortfolio() {
+        try {
+            const res = await fetch(`/portfolio/get/username/${username}`, { headers: authHeaders });
+            const data = await res.json();
+            renderPortfolio(data);
+        } catch (e) {
+            console.error("Failed to load portfolio", e);
+        }
+    }
+
+    // Renderowanie elementów w sekcji portfolio
+    function renderPortfolio(strategies) {
+        const container = document.getElementById('portfolio-list');
+        container.innerHTML = "";
+
+        if(strategies.length === 0) {
+            container.innerHTML = "<p class='text-muted'>No active strategies found.</p>";
+            return;
+        }
+
+        strategies.forEach(strategy => {
+            // Renderowanie rozwijanej listy odnóg (OptionLegs)
+            let legsHtml = strategy.optionLegs ? strategy.optionLegs.map(leg =>
+                `<li>${leg.position} ${leg.optionType} @ Strike: ${leg.strikePrice} (Exp: ${leg.expirationDate})</li>`
+            ).join('') : 'No legs data';
+
+            const item = document.createElement('div');
+            item.className = 'col-md-6 col-lg-4';
+            item.innerHTML = `
+                <div class="portfolio-item" onclick="viewStrategyChart('${strategy.id}')">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-primary">${strategy.strategyName || 'Strategy'}</h6>
+                        <span class="badge bg-${strategy.status === 'ACTIVE' ? 'success' : 'secondary'}">${strategy.status || 'ACTIVE'}</span>
+                    </div>
+                    <div class="text-dark small fw-semibold mb-2">
+                        Ticker: ${strategy.company ? strategy.company.ticker : 'N/A'} | ${strategy.direction} | ${strategy.optionType || 'MULTI'}
+                    </div>
+                    <div class="leg-details">
+                        <ul class="mb-0 ps-3">${legsHtml}</ul>
+                    </div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // Oglądanie wykresu zapisanej strategii[cite: 1]
+    async function viewStrategyChart(strategyId) {
+        // W pełnej implementacji musisz najpierw pobrać dokładne DTO na podstawie ID[cite: 1]
+        // Tutaj dla demonstracji wywołujemy endpoint z wyciągniętymi danymi
+        try {
+            const stratRes = await fetch(`/strategy/get/id/${strategyId}`, { headers: authHeaders });
+            const strategyDto = await stratRes.json();
+
+            // Wywołanie endpointu /portfolio/chart[cite: 1]
+            const chartRes = await fetch('/portfolio/chart', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(strategyDto)
+            });
+            const data = await chartRes.json();
+
+            document.getElementById('strategy-title').innerText = `Portfolio View: ${strategyDto.strategyName}`;
+            drawChart(data.strategyChart);
+            // Przewinięcie okna do góry, żeby użytkownik widział wykres
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) {
+            console.error("Failed to fetch chart data", e);
+        }
+    }
+
+    // Renderowanie wykresu (Chart.js)
     function drawChart(pointsData) {
-        const ctx = document.getElementById('myChart').getContext('2d');
+        const ctx = document.getElementById('strategyChart').getContext('2d');
         if (myChart) myChart.destroy();
 
-        // Mapowanie pól 'strikePrice' i 'profit' na 'x' i 'y' dla ChartGenerator.js
-        const mappedData = (pointsData || []).map(p => ({
-            x: p.price,
-            y: p.profit
-        }));
+        const mappedData = (pointsData || []).map(p => ({ x: p.price, y: p.profit }));
 
         myChart = new Chart(ctx, {
             type: 'line',
@@ -240,6 +321,24 @@
                 }
             }
         });
+    }
+
+    // Efekt wizualny dodawania do portfolio
+    function triggerSaveAnimation() {
+        const btn = document.getElementById('execute-section');
+        const clone = btn.cloneNode(true);
+        const rect = btn.getBoundingClientRect();
+
+        // Klonujemy sekcję akcji i animujemy jej "odlot" w stronę listy portfolio
+        clone.classList.add('flying-element');
+        clone.style.top = `${rect.top}px`;
+        clone.style.left = `${rect.left}px`;
+        clone.style.width = `${rect.width}px`;
+
+        document.body.appendChild(clone);
+
+        // Usunięcie klonu z DOM po animacji
+        setTimeout(() => clone.remove(), 800);
     }
 </script>
 </body>
