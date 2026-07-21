@@ -35,7 +35,7 @@ public class UserController {
 
     @GetMapping("/portfolio/get/{userId}")
     public List<PortfolioStrategyDTO> getUserPortfolio(@PathVariable String userId) {
-        return strategyMapper.toDtoList(strategyService.getPortfolioByUserId(userId));
+        return strategyMapper.toDtoPortfolioStrategyList(strategyService.getPortfolioByUserId(userId));
     }
 
     @GetMapping("/{userId}")

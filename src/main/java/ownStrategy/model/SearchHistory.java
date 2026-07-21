@@ -18,12 +18,12 @@ public class SearchHistory {
     @Id
     private String id;
     private String keyword;
-    private LocalDateTime date;
+    private LocalDateTime searchDate;
     private int resultsCount;
     private List<Company> companies;
     public SearchHistory(String keyword, int resultsCount) {
         this.keyword = keyword;
         this.resultsCount = resultsCount;
-        this.date = LocalDateTime.now();
+        this.searchDate = LocalDateTime.now();
     }
 }

@@ -1,19 +1,19 @@
 package ownStrategy.dto.request;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ownStrategy.model.entity.portfolio.Request;
+import ownStrategy.model.OptionType;
 
 import java.time.LocalDate;
-import java.util.List;
 @Getter
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public abstract class MultiSpreadVerticalRequest extends Request {
-    List<Double> spreadValues;
+public abstract class CallPutSpreadAsymmetricalRequestDTO extends CallPutSpreadRequestDTO {
+    OptionType optionType;
+    double spreadValue;
     LocalDate tradeDate;
     LocalDate expiryDate;
-    double spotPrice;
 }

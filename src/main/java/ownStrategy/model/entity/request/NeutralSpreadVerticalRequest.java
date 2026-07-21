@@ -1,6 +1,9 @@
-package ownStrategy.dto.request;
-import lombok.*;
-import ownStrategy.model.entity.portfolio.Request;
+package ownStrategy.model.entity.request;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDate;
 @Getter
@@ -11,5 +14,4 @@ public abstract class NeutralSpreadVerticalRequest extends Request {
     double spreadValue;
     LocalDate tradeDate;
     LocalDate expiryDate;
-    double spotPrice;
 }

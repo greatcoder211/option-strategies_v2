@@ -9,5 +9,5 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public class RatioSpreadRequest extends CallPutSpreadAsymmetricalRequest {
+public class RatioSpreadRequestDTO extends CallPutSpreadAsymmetricalRequestDTO {
 }

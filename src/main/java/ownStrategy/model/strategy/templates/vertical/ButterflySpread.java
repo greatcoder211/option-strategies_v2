@@ -24,8 +24,8 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
     @Positive
     private final double spreadValue;
 
-    public ButterflySpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
-        super(quantity, position);
+    public ButterflySpread(int quantity, Belfort position, String infoLink, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
+        super(quantity, position, infoLink);
         //najpierw to, bo to będziemy walidować
         this.spreadValue = spreadValue;
         //walidacja
@@ -50,7 +50,7 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
         }
         //expiryDate musi być za tradeDate
         if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
-            throw new ChronologyException("The expiry date should be after the trade date.");
+            throw new ChronologyException("The expiry searchDate should be after the trade searchDate.");
         }
         //anything else?
     }

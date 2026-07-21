@@ -73,7 +73,7 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
         }
         for(LocalDate expiryDate: expiryDates){
             if(!expiryDate.isAfter(tradeDates.get(0))){
-                throw new ChronologyException("The expiry date should be after the trade date.");
+                throw new ChronologyException("The expiry searchDate should be after the trade searchDate.");
             }
         }
         if(expiryDates.get(0).equals(expiryDates.get(1))){

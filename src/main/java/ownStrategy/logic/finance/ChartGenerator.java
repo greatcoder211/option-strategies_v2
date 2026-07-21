@@ -1,15 +1,14 @@
 package ownStrategy.logic.finance;
 
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ownStrategy.config.DefaultPricingContext;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.PricingContext;
-
 import java.util.ArrayList;
 import java.util.List;
-@NoArgsConstructor(force = true)
+
 @Component
 public class ChartGenerator {
     private final DefaultPricingContext defaultPricingContext;

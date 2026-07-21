@@ -1,3 +1,7 @@
+
+
+
+
 ### GET request to example server
 GET https://examples.http-client.intellij.net/get
     ?generated-in=IntelliJ IDEA
@@ -228,3 +232,24 @@ Authorization: Bearer {{auth_token}}
 ### Pobranie po ID (Przykładowe ID z Twoich logów)
 GET http://localhost:8080/api/user/id/69ab0d29e6efa034f2511912
 Authorization: Bearer {{auth_token}}
+
+### cos tam
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "yourUser",
+  "password": "yourPassword"
+}
+
+> {%
+    // Pobranie tokena z odpowiedzi JSON (zmień 'token', jeśli Twój JSON ma inny klucz)
+    var authToken = response.body.token;
+
+    // Zapisanie tokena do zmiennej globalnej
+    client.global.set("jwtToken", authToken);
+%}
+
+### Test endpointu z firmami
+GET http://localhost:8080/companies/microsoft
+Authorization: Bearer {{jwtToken}}

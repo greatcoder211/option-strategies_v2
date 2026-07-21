@@ -33,7 +33,7 @@ public class Strangle extends NamedStrategy {
         }
         //expiryDate musi być za tradeDate
         if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
-            throw new ChronologyException("The expiry date should be after the trade date.");
+            throw new ChronologyException("The expiry searchDate should be after the trade searchDate.");
         }
         //anything else?
     }

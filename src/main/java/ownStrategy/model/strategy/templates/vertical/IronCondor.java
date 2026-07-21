@@ -14,7 +14,7 @@ public class IronCondor extends NamedStrategy {
     private final VerticalStructure verticalStructure = new VerticalStructure();
     private final List<Double> spreadValues;
 
-    //although we need only one date, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
+    //although we need only one searchDate, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
     public IronCondor(int quantity, Belfort position, List<Double> spreadValues, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);
         this.spreadValues = spreadValues;
@@ -34,7 +34,7 @@ public class IronCondor extends NamedStrategy {
 
         //expiryDate musi być za tradeDate
         if (!expiryDates.get(0).isAfter(tradeDates.get(0))) {
-            throw new ChronologyException("The expiry date should be after the trade date.");
+            throw new ChronologyException("The expiry searchDate should be after the trade searchDate.");
         }
         //anything else? maybe number format?
     }

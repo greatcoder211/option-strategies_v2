@@ -91,7 +91,7 @@ public class OptionControllerL {
         }
 
         // Data
-        ui.getNextLine("Enter the expiration date: ");
+        ui.getNextLine("Enter the expiration searchDate: ");
         LocalDate expiry = getValidDate();
         os.setTimeToExpiry(ChronoUnit.DAYS.between(LocalDate.now(), expiry) / 365.0);
         os.setName();
@@ -138,11 +138,11 @@ public class OptionControllerL {
                 String[] data = ui.getNextLine("").split(" ");
                 LocalDate d = LocalDate.of(Integer.parseInt(data[2]), Integer.parseInt(data[1]), Integer.parseInt(data[0]));
                 if (d.isBefore(LocalDate.now()) || d.isAfter(LocalDate.now().plusYears(3)) || d.isEqual(LocalDate.now())) {
-                    ui.print2("Please enter a valid date!");
+                    ui.print2("Please enter a valid searchDate!");
                     continue;
                 }
                 return d;
-            } catch (Exception e) { ui.print2("Please enter a valid date!"); }
+            } catch (Exception e) { ui.print2("Please enter a valid searchDate!"); }
         }
     }
 

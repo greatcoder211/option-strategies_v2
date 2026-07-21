@@ -11,9 +11,11 @@ import ownStrategy.model.SearchHistory;
 import ownStrategy.repository.SearchHistoryRepository;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,57 +23,41 @@ import java.util.Optional;
 
 @Service
 public class TickerSearch {
-
-    private static final String API_KEY2 = "${ALPHAVANTAGE_API_KEY}";
-    private static final HttpClient client2 = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
-    private static final ObjectMapper mapper2 = new ObjectMapper();
-    /*
-        private final SearchHistoryRepository repository;
-        private final String apiKey;
-        public TickerSearch(SearchHistoryRepository repository, @Value("${alphavantage.api.key}")apiKey){
-            this.repository = repository;
-            this.apiKey = API_KEY;
-        }
-
-     */
-// 1. Pola są teraz instancyjne (bez static) i finalne
-    private final String API_KEY;
+    private final String api_key;
     private final HttpClient client;
     private final ObjectMapper mapper;
-    private final SearchHistoryRepository repository;
+    private final SearchHistoryRepository searchHistoryRepository;
 
-    // 2. Poprawny konstruktor - Spring wstrzykuje tu wszystko, czego potrzebujemy
-    public TickerSearch(SearchHistoryRepository repository, @Value("${ALPHAVANTAGE_API_KEY}") String API_KEY) {
-        this.repository = repository;
-        this.API_KEY = API_KEY;
+    public TickerSearch(SearchHistoryRepository searchHistoryRepository, @Value("${alphavantage.api.key}") String api_key) {
+        this.searchHistoryRepository = searchHistoryRepository;
+        this.api_key = api_key;
         this.client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
+                                .connectTimeout(Duration.ofSeconds(10))
+                                .build();
         this.mapper = new ObjectMapper();
     }
 
-    // Metoda zwraca wybrany Symbol (String) albo null, jak się nie uda
     public List<Company> getCompanies(String key) {
-
-
-        Optional<SearchHistory> cached = repository.findByKeyword(key);
+        //żeby nie pukać ponownie pod ten sam adres, sprawdzamy czy już kiedyś nie wykonaliśmy danej kwerendy
+        Optional<SearchHistory> cached = searchHistoryRepository.findByKeyword(key);
         if (cached.isPresent()) {
             System.out.println(">>> MongoDB: Real database data");
             return cached.get().getCompanies();
         }
-
+        //"test": do wywalenia niedługo
         if ("test".equalsIgnoreCase(key)) {
             SearchHistory history = new SearchHistory("TEST_CONNECTION", 7);
-            repository.save(history); // Tu dzieje się magia zapisu
+            searchHistoryRepository.save(history);
             System.out.println(">>> MongoDB: Dokument wysłany do chmury!");
             return List.of(new Company("TEST", "Testowa Firma w Chmurze", "Poland"));
         }
-
-        String url = "https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + key + "&apikey=" + API_KEY;
+        String encodedKeywords = URLEncoder.encode(key, StandardCharsets.UTF_8);
+        String url = "https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + encodedKeywords + "&apikey=" + api_key;
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+//todo: wywalic
+            System.out.println("RAW RESPONSE FROM API: " + response.body());
             JsonNode root = mapper.readTree(response.body());
             JsonNode matches = root.path("bestMatches");
 
@@ -93,7 +79,7 @@ public class TickerSearch {
             if (!results.isEmpty()) {
                 SearchHistory history2 = new SearchHistory(key, results.size());
                 history2.setCompanies(results);
-                repository.save(history2);
+                searchHistoryRepository.save(history2);
                 System.out.println(">>> MongoDB: Results saved for: " + key);
             }
             return results;

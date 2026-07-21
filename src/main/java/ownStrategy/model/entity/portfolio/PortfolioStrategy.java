@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 @Getter @Setter @NoArgsConstructor
 //@Document(collection = "bedzie-sanfrancisco")
-//@CompoundIndex(name = "user_ticker_date_idx", def = "{'userID': 1, 'ticker': 1, 'date': -1}")//nie pamietam juz o co tu chodzilo
+//@CompoundIndex(name = "user_ticker_date_idx", def = "{'userID': 1, 'ticker': 1, 'searchDate': -1}")//nie pamietam juz o co tu chodzilo
 public class PortfolioStrategy {
     private LocalDate createdAt;
     @Id

@@ -1,13 +1,15 @@
 package ownStrategy.logic.mapper.factory;
 
-import ownStrategy.dto.request.CalendarSpreadRequest;
+import org.springframework.stereotype.Component;
+import ownStrategy.dto.request.CalendarSpreadRequestDTO;
 import ownStrategy.logic.mapper.StrategyFactory;
+import ownStrategy.model.entity.request.CalendarSpreadRequest;
 import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.model.strategy.templates.horizontal.CalendarSpread;
-
+@Component
 public class CalendarSpreadFactory implements StrategyFactory<CalendarSpreadRequest> {
     @Override
-    public OptionStrategy create(CalendarSpreadRequest request) {
+    public OptionStrategy create(CalendarSpreadRequest request, double spotPrice) {
         return new CalendarSpread(
                 request.getQuantity(),
                 request.getPosition(),
@@ -16,7 +18,7 @@ public class CalendarSpreadFactory implements StrategyFactory<CalendarSpreadRequ
                 request.getTradeDate(),
                 request.getShortExpiryDate(),
                 request.getLongExpiryDate(),
-                request.getSpotPrice()
+                spotPrice
         );
     }
     @Override

@@ -5,5 +5,5 @@ import lombok.*;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public class ButterflySpreadRequest extends CallPutSpreadVerticalRequest {
+public class ButterflySpreadRequestDTO extends CallPutSpreadVerticalRequestDTO {
 }

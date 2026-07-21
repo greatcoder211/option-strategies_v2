@@ -1,4 +1,4 @@
-package ownStrategy.dto.request;
+package ownStrategy.model.entity.request;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,10 +11,9 @@ import java.time.LocalDate;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public abstract class CallPutSpreadAsymmetricalRequest extends CallPutSpreadRequest {
+public abstract class CallPutSpreadVerticalRequest extends CallPutSpreadRequest {
     OptionType optionType;
     double spreadValue;
     LocalDate tradeDate;
     LocalDate expiryDate;
-    double spotPrice;
 }

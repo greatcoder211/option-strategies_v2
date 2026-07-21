@@ -1,18 +1,19 @@
 package ownStrategy.service.strategy;
 
 import org.springframework.stereotype.Service;
+import ownStrategy.dto.request.RequestDTO;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.portfolio.Company;
 import ownStrategy.exception.APILimitExceededException;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Status;
 import ownStrategy.model.entity.portfolio.PortfolioStrategy;
-import ownStrategy.model.entity.portfolio.Request;
 import ownStrategy.logic.finance.ChartGenerator;
 import ownStrategy.logic.mapper.StrategyFactoryRegistry;
 import ownStrategy.logic.network.MarketDataClient;
 import ownStrategy.logic.network.TickerSearch;
 import ownStrategy.model.entity.portfolio.OptionLeg;
+import ownStrategy.model.entity.request.Request;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.OptionStrategy;
 
@@ -33,21 +34,14 @@ public class StrategyBuilderService {
         this.tickerSearch = tickerSearch;
     }
 
+    public List<Company> generateListOfCompanies(String keySearch) {
+        return tickerSearch.getCompanies(keySearch);
+    }
+
     public List<ChartPoint> processPreviewChart(Request request) {
-           String ticker = getTicker(request.getKeySearch(), request.getSelectedCompany());
-           double spotPrice = getSpotPrice(ticker);
-           OptionStrategy domainStrategy = mapRequestToOptionStrategy(request);
-           return chartGenerator.draw(spotPrice, domainStrategy.getOptionLegs());
-    }
-
-    public String getTicker(String keySearch, String selectedCompanyRaw){
-        return getCompany(keySearch, selectedCompanyRaw).ticker();
-    }
-
-    public Company getCompany(String keySearch, String selectedCompanyRaw){
-        List<Company> companies = tickerSearch.getCompanies(keySearch);
-        int indexOfSelectedCompany = getIndexOfSelectedCompany(selectedCompanyRaw);
-        return companies.get(indexOfSelectedCompany - 1);
+       double spotPrice = getSpotPrice(request.getSelectedCompany().ticker());
+       OptionStrategy domainStrategy = mapRequestToOptionStrategy(request, spotPrice);
+       return chartGenerator.draw(spotPrice, domainStrategy.getOptionLegs());
     }
 
     public double getSpotPrice(String ticker){
@@ -58,29 +52,14 @@ public class StrategyBuilderService {
         return price;
     }
 
-    public OptionStrategy mapRequestToOptionStrategy(Request request){
-        return strategyFactoryRegistry.mapToDomain(request);
-    }
-
-    public int getIndexOfSelectedCompany(String line){
-        //line to są kolejne Stringi typu 1. Apple Inc. [AAPL] itd.
-        try {
-            if(line.charAt(0) <= '9'){
-                return Character.getNumericValue(line.charAt(0));
-            }
-            else{
-                return Integer.parseInt(line.split(" ")[0]);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Could not parse index from: " + line);
-        }
+    public OptionStrategy mapRequestToOptionStrategy(Request request, double spotPrice){
+        return strategyFactoryRegistry.mapToDomain(request, spotPrice);
     }
 
     public PortfolioStrategy createStrategy(Request request) {
-        Company company = getCompany(request.getKeySearch(), request.getSelectedCompany());
-        double spotPrice = getSpotPrice(company.ticker());
-        OptionStrategy domainStrategy = mapRequestToOptionStrategy(request);
-        return mapToPortfolio(domainStrategy, spotPrice, company);
+        double spotPrice = getSpotPrice(request.getSelectedCompany().ticker());
+        OptionStrategy domainStrategy = mapRequestToOptionStrategy(request, spotPrice);
+        return mapToPortfolio(domainStrategy, spotPrice, request.getSelectedCompany());
     }
 
     public PortfolioStrategy mapToPortfolio(OptionStrategy domainStrategy, double spotPrice, Company company) {

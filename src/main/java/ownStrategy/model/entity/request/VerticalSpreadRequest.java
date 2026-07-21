@@ -1,4 +1,4 @@
-package ownStrategy.dto.request;
+package ownStrategy.model.entity.request;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

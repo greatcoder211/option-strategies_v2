@@ -81,7 +81,7 @@ public class CalendarSpread extends NamedStrategy implements CallPutStrategy {
         if(strikePrice <= 0)
             throw new StrikePriceException("Wrong strike. Strike must be a positive value.");
         if(!expiryDates.get(0).isAfter(tradeDates.get(0))){
-            throw new ChronologyException("The expiry date should be after the trade date.");
+            throw new ChronologyException("The expiry searchDate should be after the trade searchDate.");
         }
     }
     @Override

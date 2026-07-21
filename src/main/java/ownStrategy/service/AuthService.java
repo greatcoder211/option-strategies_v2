@@ -28,7 +28,16 @@ public class AuthService {
         if (userRepository.findByUsername(registerRequest.username()).isPresent()) {
             throw new RuntimeException("Error: Username is already taken!");
         }
-        return userRepository.save(new User(registerRequest.username(), registerRequest.email(), passwordEncoder.encode(registerRequest.password())));
+        User newUser = new User(registerRequest.username(), registerRequest.email(), passwordEncoder.encode(registerRequest.password()));
+        try{
+            return userRepository.save(newUser);
+        }
+        catch (Exception e){
+            System.out.println("Registration failed for email: " + newUser.getEmail());
+            System.out.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public String getJwt(User user) {

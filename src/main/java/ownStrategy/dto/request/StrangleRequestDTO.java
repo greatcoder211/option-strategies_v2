@@ -9,5 +9,6 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public class IronButterflyRequest extends NeutralSpreadVerticalRequest{
+
+public class StrangleRequestDTO extends NeutralSpreadVerticalRequestDTO {
 }

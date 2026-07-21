@@ -1,4 +1,4 @@
-package ownStrategy.dto.request;
+package ownStrategy.model.entity.request;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,6 +9,5 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
-public class CalendarSpreadRequest extends OneStrikeMultiDateHorizontalRequest{
-
+public class RatioSpreadRequest extends CallPutSpreadAsymmetricalRequest {
 }

@@ -11,28 +11,37 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ownStrategy.security.CustomAccessDeniedHandler;
 import ownStrategy.security.JwtRequestFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, CustomAccessDeniedHandler customAccessDeniedHandler) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
     }
 
     //plac budowy HttpSecurity to wujek Michał, kolejne czesci streama to wytyczne ogolne(nie ruszac piwnicy), filtry(pracownicy, majstry) same się dobiorą i skonfigurują na koniec- patrz notatki, tam jest to ladnie gdzies
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configure(http))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                       .anyRequest().authenticated()
+                        .requestMatchers("/", "/index.html", "/auth.html", "/css/**", "/js/**", "/images/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                // Dodanie konfiguracji exceptionHandling, która wyłapie błędy 403
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

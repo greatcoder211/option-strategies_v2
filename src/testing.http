@@ -1,0 +1,35 @@
+### 1. Retrieve and set JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Wuaschii",
+  "password": "WebDev422##%%"
+}
+
+> {%
+    client.global.set("jwtToken", "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJXdWFzY2hpaSIsImlhdCI6MTc4NDU1Mjg2MCwiZXhwIjoxNzg0NjM5MjYwfQ.Uj8yxqfvwkp5BjnNFu9e9aL7y7eFUlkK2N3dDU2EZq1R-6ibWUBXVr40xCdgTVJEsxS0t8b8FBjLejeZ_jruWQ");
+%}
+
+### 2. Valid company search request
+GET http://localhost:8080/companies/microsoft
+Authorization: Bearer {{jwtToken}}
+
+### 3. Testing if the charts are being correctly drawn
+POST http://localhost:8080/preview
+Content-Type: application/json
+
+{
+  "Strategy Type": "Vertical Spread",
+  "quantity": 1,
+  "position": "BUY",
+  "strategyName": "MSFT Test Vertical",
+  "optionType": "CALL",
+  "spreadValue": 10.0,
+  "expiryDate": "2026-08-20",
+  "selectedCompany": {
+    "ticker": "MSFT",
+    "name": "Microsoft Corporation",
+    "region": "United States"
+  }
+}
