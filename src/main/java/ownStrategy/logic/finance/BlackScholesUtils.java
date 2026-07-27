@@ -12,16 +12,22 @@ public class BlackScholesUtils {
      * @return Teoretyczna cena opcji Call
      */
     public static double calculateCallPrice(double S, double K, double T, double r, double sigma) {
+        T = Math.abs(T);
+        if (T == 0) {
+            return Math.max(S - K, 0);
+        }
         double d1 = (Math.log(S / K) + (r + 0.5 * Math.pow(sigma, 2)) * T) / (sigma * Math.sqrt(T));
         double d2 = d1 - sigma * Math.sqrt(T);
         return S * cumulativeDistribution(d1) - K * Math.exp(-r * T) * cumulativeDistribution(d2);
     }
-
     /**
      * Oblicza cenę opcji Put.
      */
     public static double calculatePutPrice(double S, double K, double T, double r, double sigma) {
-        double d1 = (Math.log(S / K) + (r + 0.5 * Math.pow(sigma, 2)) * T) / (sigma * Math.sqrt(T));
+        T = Math.abs(T);
+        if (T == 0) {
+            return Math.max(K - S, 0);
+        }        double d1 = (Math.log(S / K) + (r + 0.5 * Math.pow(sigma, 2)) * T) / (sigma * Math.sqrt(T));
         double d2 = d1 - sigma * Math.sqrt(T);
         return K * Math.exp(-r * T) * cumulativeDistribution(-d2) - S * cumulativeDistribution(-d1);
     }

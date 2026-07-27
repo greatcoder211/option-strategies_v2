@@ -7,11 +7,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public abstract class NamedStrategy extends OptionStrategy {
-    protected final String infoLink;
 
-    public NamedStrategy(int quantity, Belfort position, String infoLink){
+    public NamedStrategy(int quantity, Belfort position){
         super(quantity, position);
-        this.infoLink = infoLink;
     }
 
     public abstract List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates,  List<LocalDate> expiryDates);

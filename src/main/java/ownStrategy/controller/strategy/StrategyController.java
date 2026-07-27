@@ -13,7 +13,7 @@ import ownStrategy.logic.mapper.StrategyMapper;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.criteria.Filter;
 import ownStrategy.model.entity.portfolio.PortfolioStrategy;
-import ownStrategy.model.entity.request.Request;
+import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.service.strategy.StrategyBuilderService;
 import ownStrategy.service.strategy.StrategyFilterService;
 import ownStrategy.service.strategy.StrategyService;
@@ -28,23 +28,24 @@ public class StrategyController {
     private final StrategyBuilderService strategyBuilderService;
     private final StrategyFilterService strategyFilterService;
     private final StrategyMapper strategyMapper;
-    private final StrategyModelAssembler strategyModelAssembler;
+    private final OptionStrategyModelAssembler optionStrategyModelAssembler;
 
     public StrategyController(StrategyService strategyService, StrategyBuilderService strategyBuilderService,
-                              StrategyFilterService strategyFilterService, StrategyMapper strategyMapper, StrategyModelAssembler strategyModelAssembler) {
+                              StrategyFilterService strategyFilterService, StrategyMapper strategyMapper, OptionStrategyModelAssembler optionStrategyModelAssembler) {
         this.strategyService = strategyService;
         this.strategyBuilderService = strategyBuilderService;
         this.strategyFilterService = strategyFilterService;
         this.strategyMapper = strategyMapper;
-        this.strategyModelAssembler = strategyModelAssembler;
+        this.optionStrategyModelAssembler = optionStrategyModelAssembler;
     }
 
+/*  TODO: gucknij, albo do wywalenia, albo do przerobienia(czy chcę w ogóle linki na poziomie już zagranych strategii z portfolio?
     @PostMapping
     public ResponseEntity<EntityModel<PortfolioStrategy>> createStrategy(@RequestBody RequestDTO request) {
         PortfolioStrategy portfolioStrategy = strategyBuilderService.createStrategy(strategyMapper.toEntity(request));
-        EntityModel<PortfolioStrategy> model = strategyModelAssembler.toModel(portfolioStrategy);
+        EntityModel<PortfolioStrategy> model = optionStrategyModelAssembler.toModel(portfolioStrategy);
         return ResponseEntity.ok(model);
-    }
+    }*/
 
     //tutaj przykład: dto -> oryginalna encja -> przekazujemy dalej -> dto na powrót
     @PostMapping("/execute")
@@ -58,21 +59,15 @@ public class StrategyController {
         return strategyMapper.toDtoCompanyList(strategyBuilderService.generateListOfCompanies(keySearch));
     }
 
+    //EntityModel<> jest niezbędny do tego, żeby dokleił mi linki HATEOAS
     @PostMapping("/preview")
-    public ResponseEntity<EntityModel<StrategyContracts.PreviewChartResponse>> previewStrategy(@RequestBody RequestDTO requestDto){
-        StrategyContracts.PreviewChartResponse previewChartResponse = new StrategyContracts.PreviewChartResponse(requestDto.getStrategyName(), strategyBuilderService.processPreviewChart(strategyMapper.toEntity(requestDto)));
-        EntityModel<StrategyContracts.PreviewChartResponse> model= strategyModelAssembler.toModel(strategyBuilderService.mapRequestToOptionStrategy(strategyMapper.toEntity(requestDto), strategyBuilderService.getSpotPrice(requestDto.getSelectedCompany().ticker())));
-        return  ResponseEntity.ok(model);
+    public EntityModel<StrategyContracts.PreviewChartResponse> previewStrategy(@RequestBody RequestDTO requestDto){
+        //argument obronny ze jest tu trochę logiki- nie da rady inaczej przez limity API, a ceny jest tkanką wspolną tego, co jest wymagane w serwisie i w assemblerze(controller to spaja)
+//        double spotPrice = strategyBuilderService.getSpotPrice(requestDto.getSelectedCompany().ticker());
+        double spotPrice = 220.0;
+        EntityModel<OptionStrategy> modelAssembler = optionStrategyModelAssembler.toModel(strategyBuilderService.mapRequestToOptionStrategy(strategyMapper.toEntity(requestDto), spotPrice));
+        return EntityModel.of(new StrategyContracts.PreviewChartResponse(requestDto.getStrategyName(), strategyBuilderService.processPreviewChart(strategyMapper.toEntity(requestDto), spotPrice)), modelAssembler.getLinks());
     }
-
-    @Postmapping("/pierwsze/co/w/ten/brzydki/dzien/wyszponcisz/to/osobny/postmapping/na/linki")
-    powodzonka
-
-    @PostMapping("/preview")
-    public StrategyContracts.PreviewChartResponse preview(@RequestBody RequestDTO requestDto) {
-        return new StrategyContracts.PreviewChartResponse(requestDto.getStrategyName(), strategyBuilderService.processPreviewChart(strategyMapper.toEntity(requestDto)));
-    }
-
 
     //dto -> original -> service -> return double
     @PostMapping("/portfolio/score")

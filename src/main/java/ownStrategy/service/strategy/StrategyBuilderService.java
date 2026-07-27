@@ -38,8 +38,7 @@ public class StrategyBuilderService {
         return tickerSearch.getCompanies(keySearch);
     }
 
-    public List<ChartPoint> processPreviewChart(Request request) {
-       double spotPrice = getSpotPrice(request.getSelectedCompany().ticker());
+    public List<ChartPoint> processPreviewChart(Request request, double spotPrice) {
        OptionStrategy domainStrategy = mapRequestToOptionStrategy(request, spotPrice);
        return chartGenerator.draw(spotPrice, domainStrategy.getOptionLegs());
     }

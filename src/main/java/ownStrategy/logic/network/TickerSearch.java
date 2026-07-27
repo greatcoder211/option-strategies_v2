@@ -2,6 +2,7 @@ package ownStrategy.logic.network;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ownStrategy.model.entity.portfolio.Company;
@@ -37,6 +38,7 @@ public class TickerSearch {
         this.mapper = new ObjectMapper();
     }
 
+    @RateLimiter(name = "alphaVantageLimit")
     public List<Company> getCompanies(String key) {
         //żeby nie pukać ponownie pod ten sam adres, sprawdzamy czy już kiedyś nie wykonaliśmy danej kwerendy
         Optional<SearchHistory> cached = searchHistoryRepository.findByKeyword(key);
@@ -55,6 +57,8 @@ public class TickerSearch {
         String url = "https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + encodedKeywords + "&apikey=" + api_key;
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
+            long requestTime = System.currentTimeMillis();
+            System.out.println("API CALL at: " + requestTime + " ms");
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 //todo: wywalic
             System.out.println("RAW RESPONSE FROM API: " + response.body());

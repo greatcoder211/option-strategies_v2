@@ -2,6 +2,7 @@ package ownStrategy.logic.network.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ public class AlphaVantageClient implements MarketDataClient {
     }
 
     @Override
+    @RateLimiter(name = "alphaVantageLimit")
     public double getStockPrice(String symbol) {
         String url = String.format("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=%s", symbol, api_key);
         try {
@@ -36,11 +38,13 @@ public class AlphaVantageClient implements MarketDataClient {
                                             .uri(URI.create(url))
                                             .GET()
                                             .build();
+            long requestTime = System.currentTimeMillis();
+            System.out.println("API CALL at: " + requestTime + " ms");
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             String jsonResponse = response.body();
             JsonNode rootNode = mapper.readTree(jsonResponse);
-            if (rootNode.has("Error Message") || rootNode.has("Note") || rootNode.isEmpty()) {
-                throw new APILimitExceededException("API Limit or wrong symbol");
+            if (rootNode.has("Error Message") || rootNode.has("Note") || rootNode.has("Information") || rootNode.isEmpty()) {
+                throw new APILimitExceededException("API Limit exceeded or wrong symbol");
             }
             JsonNode globalQuote = rootNode.path("Global Quote");
             if (globalQuote.isMissingNode()||!globalQuote.has("05. price")) {
@@ -49,8 +53,8 @@ public class AlphaVantageClient implements MarketDataClient {
             }
             String priceStr = globalQuote.get("05. price").asText();
             return Double.parseDouble(priceStr);
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+        } catch (java.io.IOException | java.lang.InterruptedException e) {
+            System.err.println("Network or Parsing Error: " + e.getMessage());
             return -1.0;
         }
     }

@@ -44,7 +44,6 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         Collections.sort(strikePrices);
-        Collections.sort(expiryDates);
         List<OptionLeg> optionLegs = new ArrayList<>();
         if(position.equals(Belfort.BUY) && optionType.equals(OptionType.CALL)){
             optionLegs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.CALL, strikePrices.get(0), tradeDates.get(0), expiryDates.get(1)));

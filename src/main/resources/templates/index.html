@@ -94,7 +94,7 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Position</label>
-                        <select id="position" class="form-select">
+                        <select id="position" class="form-select" onchange="updateEducationalLink()">
                             <option value="BUY">BUY</option>
                             <option value="SELL">SELL</option>
                         </select>
@@ -140,6 +140,19 @@
                             <span class="fw-bold text-danger">Calculated on execution</span>
                         </div>
                     </div>
+
+                    <!-- Education link section -->
+                    <div id="education-link-container" class="mt-3 text-center">
+                        <a id="education-link" href="#" target="_blank" class="text-decoration-none fw-bold text-info" style="font-size: 0.9rem; display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle me-1" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                            </svg>
+                            <span id="education-link-text">Learn more about this strategy</span>
+                        </a>
+                        <div id="education-prompt" class="small text-warning fw-semibold" style="display: none;"></div>
+                    </div>
+
                     <button onclick="executeStrategy()" class="btn btn-success btn-play w-100 py-3 mt-3 fw-bold">
                         Execute Strategy
                     </button>
@@ -236,6 +249,57 @@
         'Authorization': `Bearer ${jwtToken}`
     };
 
+    // --- FIXED: robust extraction that works whether Spring HATEOAS serializes
+    // EntityModel<T> flattened at the top level, nested under "content", or
+    // (for non-EntityModel endpoints like /portfolio/chart) as a plain DTO.
+    // Logs the raw shape once so you can confirm exactly what your backend sends.
+    function extractChartArray(responseData) {
+        console.log("RAW response payload:", JSON.stringify(responseData));
+
+        // Ordered list of shapes we know this backend can produce.
+        const candidates = [
+            responseData,
+            responseData && responseData.content,
+            responseData && responseData.content && responseData.content.chartPoints,
+            responseData && responseData.chartPoints,
+            responseData && responseData.strategyChart,
+            responseData && responseData.content && responseData.content.strategyChart
+        ];
+
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate) && candidate.length > 0) {
+                return candidate;
+            }
+        }
+
+        // Last-resort fallback: walk the object graph (bounded depth) looking
+        // for the first non-empty array anywhere in the response.
+        function findArray(obj, depth) {
+            if (depth > 4 || obj === null || typeof obj !== 'object') return null;
+            if (Array.isArray(obj)) return obj.length > 0 ? obj : null;
+            for (const key in obj) {
+                const found = findArray(obj[key], depth + 1);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        const found = findArray(responseData, 0);
+        if (!found) {
+            console.warn("extractChartArray: no chart point array found in response — check RAW response payload logged above.");
+        }
+        return found || [];
+    }
+
+    // Resolves strategyName whether it's top-level or nested under "content".
+    function extractStrategyName(responseData, fallback) {
+        if (responseData && responseData.strategyName) return responseData.strategyName;
+        if (responseData && responseData.content && responseData.content.strategyName) {
+            return responseData.content.strategyName;
+        }
+        return fallback;
+    }
+
     function toggleStrategyName() {
         const isCustom = document.getElementById('customNameCheck').checked;
         document.getElementById('strategyName').style.display = isCustom ? 'block' : 'none';
@@ -269,7 +333,7 @@
 
             if (field.type === 'select') {
                 const options = field.options.map(o => `<option value="${o}">${o}</option>`).join('');
-                inputHtml = `<select id="dynamic_${field.name}" data-key="${field.name}" class="form-select dynamic-input">${options}</select>`;
+                inputHtml = `<select id="dynamic_${field.name}" data-key="${field.name}" class="form-select dynamic-input" onchange="updateEducationalLink()">${options}</select>`;
             } else {
                 inputHtml = `<input type="${field.type}" id="dynamic_${field.name}" data-key="${field.name}" class="form-control dynamic-input" step="${field.step}" required>`;
             }
@@ -278,7 +342,6 @@
             container.appendChild(col);
         });
 
-        // Time-sensitive strategies require mandatory trade and multi-expiration dates
         const requiresStrictDates = (type === 'Calendar Spread' || type === 'Poor Mans Covered');
 
         if (requiresStrictDates) {
@@ -315,6 +378,61 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', standardDatesHtml);
+        }
+
+        updateEducationalLink();
+    }
+
+    function updateEducationalLink() {
+        const type = document.getElementById('strategyType').value;
+        const position = document.getElementById('position').value;
+        const optionTypeInput = document.getElementById('dynamic_optionType');
+        const optionType = optionTypeInput ? optionTypeInput.value : null;
+
+        const eduLink = document.getElementById('education-link');
+        const eduPrompt = document.getElementById('education-prompt');
+        const linkText = document.getElementById('education-link-text');
+
+        eduLink.style.display = 'none';
+        eduPrompt.style.display = 'none';
+
+        if (type === "Butterfly Spread") {
+            if (!position) {
+                eduPrompt.innerText = "Please specify Position to see education link";
+                eduPrompt.style.display = 'block';
+                return;
+            }
+            let slug = (position === "BUY" ? "long-" : "") + "butterfly-spread";
+            eduLink.href = `https://www.tastylive.com/concepts-strategies/${slug}`;
+            linkText.innerText = `Learn more about ${type}`;
+            eduLink.style.display = 'inline-block';
+        }
+        else if (type === "Poor Mans Covered") {
+            if (!optionType) {
+                eduPrompt.innerText = "Please specify Option Type to see education link";
+                eduPrompt.style.display = 'block';
+                return;
+            }
+            let slug = "poor-man-covered-" + optionType.toLowerCase();
+            eduLink.href = `https://www.tastylive.com/concepts-strategies/${slug}`;
+            linkText.innerText = `Learn more about ${type} ${optionType}`;
+            eduLink.style.display = 'inline-block';
+        }
+        else {
+            const slugMap = {
+                "Calendar Spread": "calendar-spread",
+                "Iron Butterfly": "iron-butterfly",
+                "Iron Condor": "iron-condor",
+                "Ratio Spread": "ratio-spread",
+                "Strangle": "strangle",
+                "Vertical Spread": "vertical-spread"
+            };
+
+            if (slugMap[type]) {
+                eduLink.href = `https://www.tastylive.com/concepts-strategies/${slugMap[type]}`;
+                linkText.innerText = `Learn more about ${type}`;
+                eduLink.style.display = 'inline-block';
+            }
         }
     }
 
@@ -456,11 +574,24 @@
                 headers: authHeaders,
                 body: JSON.stringify(currentPreviewPayload)
             });
-            const data = await res.json();
-            document.getElementById('strategy-title').innerText = data.strategyName || currentPreviewPayload.strategyName;
 
-            // Obsługa przekazanej tablicy punktów
-            const points = data.chartPoints || data.strategyChart || data;
+            if (!res.ok) {
+                console.error("Preview request failed with status", res.status, await res.text());
+                alert(`Preview failed (HTTP ${res.status}). Check console for details.`);
+                return;
+            }
+
+            const data = await res.json();
+            document.getElementById('strategy-title').innerText =
+                extractStrategyName(data, currentPreviewPayload.strategyName);
+
+            const points = extractChartArray(data);
+            console.log("Extracted Preview Points:", points);
+
+            if (points.length === 0) {
+                console.warn("No chart points extracted — see RAW response payload logged above to identify the actual JSON shape.");
+            }
+
             drawChart(points);
         } catch (e) {
             console.error("Preview failed", e);
@@ -487,6 +618,7 @@
                 if (!isCustom || document.getElementById('strategyName').value.trim() === '') {
                     strategyCounter++;
                 }
+
                 setTimeout(loadPortfolio, 800);
             }
         } catch (e) {
@@ -550,9 +682,11 @@
             });
             const data = await chartRes.json();
 
-            document.getElementById('strategy-title').innerText = `Portfolio View: ${strategyDto.strategyName}`;
+            document.getElementById('strategy-title').innerText =
+                `Portfolio View: ${extractStrategyName(strategyDto, strategyDto.strategyName)}`;
 
-            const points = data.strategyChart || data.chartPoints || data;
+            const points = extractChartArray(data);
+            console.log("Extracted Portfolio Points:", points);
             drawChart(points);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (e) {
@@ -564,16 +698,14 @@
         const ctx = document.getElementById('strategyChart').getContext('2d');
         if (myChart) myChart.destroy();
 
-        // Podgląd w konsoli F12, co dokładnie przyszło z serwera
-        console.log("RAW DATA FROM BACKEND:", pointsData);
-
         let mappedData = [];
 
-        // 1. Jeśli backend zwraca List/Array obiektów: [{price: 250, payoff: -100}, ...]
         if (Array.isArray(pointsData)) {
             mappedData = pointsData.map(p => {
-                const xVal = p.pricePoint ?? p.price ?? p.stockPrice ?? p.underlyingPrice ?? p.x;
-                const yVal = p.pnl ?? p.pnL ?? p.profit ?? p.payoff ?? p.value ?? p.netProfit ?? p.amount ?? p.y;
+                // 'price' / 'profit' are the real ChartPoint field names.
+                // Extra fallbacks kept only as a defensive net for future DTO changes.
+                const xVal = p.price ?? p.pricePoint ?? p.stockPrice ?? p.underlyingPrice ?? p.x;
+                const yVal = p.profit ?? p.pnl ?? p.pnL ?? p.payoff ?? p.value ?? p.netProfit ?? p.amount ?? p.y;
 
                 return {
                     x: Number(xVal),
@@ -581,7 +713,6 @@
                 };
             }).filter(pt => !isNaN(pt.x) && !isNaN(pt.y));
         }
-        // 2. Jeśli backend zwraca Map<Double, Double>: {"250.0": -100.0, "251.0": -95.0}
         else if (typeof pointsData === 'object' && pointsData !== null) {
             mappedData = Object.entries(pointsData).map(([key, val]) => ({
                 x: Number(key),
@@ -589,7 +720,9 @@
             })).filter(pt => !isNaN(pt.x) && !isNaN(pt.y));
         }
 
-        console.log("MAPPED DATA FOR CHART.JS:", mappedData);
+        if (mappedData.length === 0) {
+            console.warn("drawChart received zero valid points — chart will render empty.");
+        }
 
         myChart = new Chart(ctx, {
             type: 'line',

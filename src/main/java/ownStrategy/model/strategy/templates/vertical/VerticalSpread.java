@@ -45,10 +45,10 @@ public class VerticalSpread extends NamedStrategy implements CallPutStrategy {
         List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadValue));
         if (this.position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-            legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
+            legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
         } else {
             legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
-            legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(1), expiryDates.get(1), tradeDates.get(1)));
+            legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
         }
         return legs;
     }
