@@ -6,7 +6,8 @@ strategy:
       risk-free-rate: 0.05
       volatility: 0.3
 
-resilience4j.ratelimiter:
+resilience4j:
+  ratelimiter:
     configs:
       default:
         limit-for-period: 1
@@ -15,15 +16,18 @@ resilience4j.ratelimiter:
     instances:
       alphaVantageLimit:
         base-config: default
-#          instances:
-#            alphaVantageLimit:
-#              limit-for-period: 1
-#              limit-refresh-period: 1s
-#              timeout-duration: 1s
+      finnHubLimit:
+        limitForPeriod: 30
+        limitRefreshPeriod: 1s
+        timeoutDuration: 500ms
+integration:
+  alphavantage:
+    api:
+      key: ${ALPHAVANTAGE_API_KEY}
+  finnhub:
+    api:
+      token: ${FINNHUB_API_TOKEN}
 
-alphavantage:
-  api:
-    key: ${ALPHAVANTAGE_API_KEY}
 
 spring:
   data:
@@ -33,4 +37,3 @@ spring:
 jwt:
   secret: ${JWT_SECRET_KEY}
   expiration: 86400000
-

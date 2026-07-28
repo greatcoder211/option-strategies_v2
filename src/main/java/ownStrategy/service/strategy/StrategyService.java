@@ -1,5 +1,6 @@
 package ownStrategy.service.strategy;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,7 +10,7 @@ import ownStrategy.model.entity.portfolio.PortfolioStrategy;
 import ownStrategy.model.Status;
 import ownStrategy.logic.finance.ChartGenerator;
 import ownStrategy.logic.finance.StrategyCalculator;
-import ownStrategy.logic.network.MarketDataClient;
+import ownStrategy.logic.network.PriceClient;
 import ownStrategy.model.*;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.portfolio.OptionLeg;
@@ -26,21 +27,21 @@ public class StrategyService {
     private final UserRepository userRepository;
     private final DefaultPricingContext defaultPricingContext;
     private final ChartGenerator chartGenerator;
-    private final MarketDataClient marketDataClient;
+    private final PriceClient priceClient;
 
     public StrategyService(StrategyRepository strategyRepository, UserRepository userRepository,
-                           ChartGenerator chartGenerator, MarketDataClient marketDataClient,
+                           ChartGenerator chartGenerator, @Qualifier ("finnhubClient") PriceClient priceClient,
                            DefaultPricingContext defaultPricingContext) {
         this.strategyRepository = strategyRepository;
         this.userRepository = userRepository;
         this.chartGenerator = chartGenerator;
-        this.marketDataClient = marketDataClient;
+        this.priceClient = priceClient;
         this.defaultPricingContext = defaultPricingContext;
     }
 
     //-- BIG THINGS OUGHT TO HAPPEN --
     public double calculatePnL(List<OptionLeg> optionLegs, double entrySpotPrice, String ticker) {
-        double simulatedSpotPrice = marketDataClient.getStockPrice(ticker);
+        double simulatedSpotPrice = priceClient.getStockPrice(ticker);
         return StrategyCalculator.calculatePnL(optionLegs, entrySpotPrice, simulatedSpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
     }
 
@@ -49,7 +50,7 @@ public class StrategyService {
     }
 
     public ChartPoint makeCurrentPriceMarker(List<OptionLeg> optionLegs, double entryPrice, String ticker) {
-        double currentPrice = marketDataClient.getStockPrice(ticker);
+        double currentPrice = priceClient.getStockPrice(ticker);
         double currentProfit = StrategyCalculator.calculatePnL(optionLegs, entryPrice, currentPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
         return new ChartPoint(currentPrice, currentProfit);
     }

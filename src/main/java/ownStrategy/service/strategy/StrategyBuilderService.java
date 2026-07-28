@@ -1,7 +1,8 @@
 package ownStrategy.service.strategy;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ownStrategy.dto.request.RequestDTO;
+import ownStrategy.logic.network.CompanySearch;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.portfolio.Company;
 import ownStrategy.exception.APILimitExceededException;
@@ -10,8 +11,7 @@ import ownStrategy.model.Status;
 import ownStrategy.model.entity.portfolio.PortfolioStrategy;
 import ownStrategy.logic.finance.ChartGenerator;
 import ownStrategy.logic.mapper.StrategyFactoryRegistry;
-import ownStrategy.logic.network.MarketDataClient;
-import ownStrategy.logic.network.TickerSearch;
+import ownStrategy.logic.network.PriceClient;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.entity.request.Request;
 import ownStrategy.model.strategy.CallPutStrategy;
@@ -25,17 +25,17 @@ import java.util.List;
 public class StrategyBuilderService {
     private final StrategyFactoryRegistry strategyFactoryRegistry;
     private final ChartGenerator chartGenerator;
-    private final MarketDataClient marketDataClient;
-    private final TickerSearch tickerSearch;
-    public StrategyBuilderService(StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, MarketDataClient marketDataClient, TickerSearch tickerSearch) {
+    private final PriceClient priceClient;
+    private final CompanySearch companySearch;
+    public StrategyBuilderService(StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, @Qualifier("finnhubClient") PriceClient priceClient, CompanySearch companySearch) {
         this.strategyFactoryRegistry = strategyFactoryRegistry;
         this.chartGenerator = chartGenerator;
-        this.marketDataClient = marketDataClient;
-        this.tickerSearch = tickerSearch;
+        this.priceClient = priceClient;
+        this.companySearch = companySearch;
     }
 
     public List<Company> generateListOfCompanies(String keySearch) {
-        return tickerSearch.getCompanies(keySearch);
+        return companySearch.getCompanies(keySearch);
     }
 
     public List<ChartPoint> processPreviewChart(Request request, double spotPrice) {
@@ -44,7 +44,7 @@ public class StrategyBuilderService {
     }
 
     public double getSpotPrice(String ticker){
-        double price = marketDataClient.getStockPrice(ticker);
+        double price = priceClient.getStockPrice(ticker);
         if (price == -1) {
             throw new APILimitExceededException("Probably API limit exceeded. See you tomorrow!");
         }

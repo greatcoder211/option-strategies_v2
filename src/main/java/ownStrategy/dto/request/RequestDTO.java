@@ -8,6 +8,7 @@ import lombok.Data;
 import ownStrategy.dto.portfolio.CompanyDTO;
 import ownStrategy.model.Belfort;
 @Data
+//Json Type Info i Json Subtypes- do deserializacji na poprawny typ
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
