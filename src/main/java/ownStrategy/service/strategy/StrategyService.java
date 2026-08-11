@@ -109,6 +109,21 @@ public class StrategyService {
         Optional<PortfolioStrategy> portfolioStrategy = strategyRepository.findById(userId);
         portfolioStrategy.ifPresent(strategyRepository::delete);
     }
+
+    public PortfolioStrategy saveStrategyForUser(PortfolioStrategy strategy, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        strategy.setUserId(user.getId());
+        return strategyRepository.save(strategy);
+    }
+
+    public void closeStrategy(String portfolioStrategyId) {
+        PortfolioStrategy portfolioStrategy = strategyRepository.findById(portfolioStrategyId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Strategy not found"));
+        portfolioStrategy.setStatus(Status.CLOSED);
+        //jeżeli id jest takie, jak id już którejś strategii w bazie- robi patcha. Else- zapisuje nowy obiekt(logiczny)
+        strategyRepository.save(portfolioStrategy);
+    }
 }
 
 /*  ---do naklepania---

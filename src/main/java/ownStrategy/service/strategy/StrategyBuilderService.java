@@ -16,6 +16,7 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.entity.request.Request;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.OptionStrategy;
+import ownStrategy.repository.StrategyRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,11 +24,15 @@ import java.util.List;
 //Strategy Builder Service- two major methods are 'processPreviewChart' and 'createStrategy', everything pertains to the initial process of strategy generation
 @Service
 public class StrategyBuilderService {
+
+    private final StrategyRepository strategyRepository;
     private final StrategyFactoryRegistry strategyFactoryRegistry;
     private final ChartGenerator chartGenerator;
     private final PriceClient priceClient;
     private final CompanySearch companySearch;
-    public StrategyBuilderService(StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, @Qualifier("finnhubClient") PriceClient priceClient, CompanySearch companySearch) {
+
+    public StrategyBuilderService(StrategyRepository strategyRepository, StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, @Qualifier("finnhubClient") PriceClient priceClient, CompanySearch companySearch) {
+        this.strategyRepository = strategyRepository;
         this.strategyFactoryRegistry = strategyFactoryRegistry;
         this.chartGenerator = chartGenerator;
         this.priceClient = priceClient;
@@ -90,5 +95,9 @@ public class StrategyBuilderService {
             if(optionLeg.tradeDate().equals(LocalDate.now())) return true;
         }
         return false;
+    }
+
+    public PortfolioStrategy saveStrategyToPortfolio(PortfolioStrategy portfolioStrategy){
+        return strategyRepository.save(portfolioStrategy);
     }
 }

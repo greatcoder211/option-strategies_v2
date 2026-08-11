@@ -19,7 +19,7 @@ public class IronCondorFactory implements StrategyFactory <IronCondorRequest>{
         return new IronCondor(
                 request.getQuantity(),
                 request.getPosition(),
-                request.getSpreadValues(),
+                request.getSpreadSizes(),
                 request.getTradeDate(),
                 request.getExpiryDate(),
                 spotPrice

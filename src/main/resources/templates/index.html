@@ -188,18 +188,18 @@
     const strategySpecificFields = {
         "Butterfly Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
-            { name: "spreadValue", label: "Spread Value", type: "number", step: "0.01" }
+            { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
         ],
         "Calendar Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
             { name: "strikePrice", label: "Strike Price", type: "number", step: "0.01" }
         ],
         "Iron Butterfly": [
-            { name: "spreadValue", label: "Spread Value", type: "number", step: "0.01" }
+            { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
         ],
         "Iron Condor": [
-            { name: "spreadValue1", label: "Shorter Spread", type: "number", step: "0.01" },
-            { name: "spreadValue2", label: "Longer Spread", type: "number", step: "0.01" }
+            { name: "spreadSize1", label: "Shorter Spread Size ($)", type: "number", step: "0.01" },
+            { name: "spreadSize2", label: "Longer Spread Size ($)", type: "number", step: "0.01" }
         ],
         "Poor Mans Covered": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
@@ -208,14 +208,14 @@
         ],
         "Ratio Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
-            { name: "spreadValue", label: "Spread Value", type: "number", step: "0.01" }
+            { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
         ],
         "Strangle": [
-            { name: "spreadValue", label: "Spread Value", type: "number", step: "0.01" }
+            { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
         ],
         "Vertical Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
-            { name: "spreadValue", label: "Spread Value", type: "number", step: "0.01" }
+            { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
         ]
     };
 
@@ -249,14 +249,9 @@
         'Authorization': `Bearer ${jwtToken}`
     };
 
-    // --- FIXED: robust extraction that works whether Spring HATEOAS serializes
-    // EntityModel<T> flattened at the top level, nested under "content", or
-    // (for non-EntityModel endpoints like /portfolio/chart) as a plain DTO.
-    // Logs the raw shape once so you can confirm exactly what your backend sends.
     function extractChartArray(responseData) {
         console.log("RAW response payload:", JSON.stringify(responseData));
 
-        // Ordered list of shapes we know this backend can produce.
         const candidates = [
             responseData,
             responseData && responseData.content,
@@ -272,8 +267,6 @@
             }
         }
 
-        // Last-resort fallback: walk the object graph (bounded depth) looking
-        // for the first non-empty array anywhere in the response.
         function findArray(obj, depth) {
             if (depth > 4 || obj === null || typeof obj !== 'object') return null;
             if (Array.isArray(obj)) return obj.length > 0 ? obj : null;
@@ -286,12 +279,11 @@
 
         const found = findArray(responseData, 0);
         if (!found) {
-            console.warn("extractChartArray: no chart point array found in response — check RAW response payload logged above.");
+            console.warn("extractChartArray: no chart point array found in response.");
         }
         return found || [];
     }
 
-    // Resolves strategyName whether it's top-level or nested under "content".
     function extractStrategyName(responseData, fallback) {
         if (responseData && responseData.strategyName) return responseData.strategyName;
         if (responseData && responseData.content && responseData.content.strategyName) {
@@ -505,7 +497,7 @@
         };
 
         const dynamicInputs = document.querySelectorAll('.dynamic-input');
-        const spreadValuesList = [];
+        const spreadSizesList = [];
         const strikePricesList = [];
 
         dynamicInputs.forEach(input => {
@@ -516,8 +508,8 @@
                 val = parseFloat(val);
             }
 
-            if (key === 'spreadValue1' || key === 'spreadValue2') {
-                if (!isNaN(val)) spreadValuesList.push(val);
+            if (key === 'spreadSize1' || key === 'spreadSize2') {
+                if (!isNaN(val)) spreadSizesList.push(val);
             } else if (key === 'strikePrice1' || key === 'strikePrice2') {
                 if (!isNaN(val)) strikePricesList.push(val);
             } else {
@@ -525,7 +517,7 @@
             }
         });
 
-        if (spreadValuesList.length > 0) payload['spreadValues'] = spreadValuesList;
+        if (spreadSizesList.length > 0) payload['spreadSizes'] = spreadSizesList;
         if (strikePricesList.length > 0) payload['strikePrices'] = strikePricesList;
 
         const dateInputs = document.querySelectorAll('.date-input');
@@ -589,7 +581,7 @@
             console.log("Extracted Preview Points:", points);
 
             if (points.length === 0) {
-                console.warn("No chart points extracted — see RAW response payload logged above to identify the actual JSON shape.");
+                console.warn("No chart points extracted.");
             }
 
             drawChart(points);
@@ -619,6 +611,7 @@
                     strategyCounter++;
                 }
 
+                // Odświeżenie portfolio po zapisie
                 setTimeout(loadPortfolio, 800);
             }
         } catch (e) {
@@ -628,7 +621,10 @@
 
     async function loadPortfolio() {
         try {
-            const res = await fetch(`${API_BASE}/portfolio/get/username/${username}`, { headers: authHeaders });
+            const res = await fetch(`${API_BASE}/portfolio/get/username/${username}`, {
+                headers: authHeaders,
+                cache: 'no-store'
+            });
             const data = await res.json();
             renderPortfolio(data);
         } catch (e) {
@@ -647,19 +643,36 @@
 
         strategies.forEach(strategy => {
             let legsHtml = strategy.optionLegs ? strategy.optionLegs.map(leg =>
-                `<li>${leg.position} ${leg.optionType} @ Strike: ${leg.strikePrice} (Exp: ${leg.expirationDate})</li>`
+                `<li>${leg.position} ${leg.type || leg.optionType} @ Strike: ${leg.strikePrice} (Exp: ${leg.expiryDate || leg.expirationDate})</li>`
             ).join('') : 'No legs data';
 
             const item = document.createElement('div');
             item.className = 'col-md-6 col-lg-4';
+
+            const strategyId = strategy.portfolioStrategyID || strategy.id;
+
+            // POPRAWIONE: poprawny warunek if-else dla kolorow
+            let statusColor = 'secondary';
+            if (strategy.status === 'OPEN') statusColor = 'success';
+            else if (strategy.status === 'PENDING') statusColor = 'warning';
+            else if (strategy.status === 'CLOSED') statusColor = 'danger';
+
+            // Renderowanie guzika Close tylko jesli strategia nie jest jeszcze zamknieta
+            const closeButtonHtml = (strategy.status !== 'CLOSED')
+                ? `<button class="btn btn-sm btn-outline-danger ms-2 py-0" style="font-size: 0.75rem;" onclick="closeStrategyAction('${strategyId}', event)">Close</button>`
+                : '';
+
             item.innerHTML = `
-                <div class="portfolio-item" onclick="viewStrategyChart('${strategy.id}')">
+                <div class="portfolio-item" onclick="viewStrategyChart('${strategyId}')">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold mb-0 text-primary">${strategy.strategyName || 'Strategy'}</h6>
-                        <span class="badge bg-${strategy.status === 'ACTIVE' ? 'success' : 'secondary'}">${strategy.status || 'ACTIVE'}</span>
+                        <div>
+                            <span class="badge bg-${statusColor}">${strategy.status || 'OPEN'}</span>
+                            ${closeButtonHtml}
+                        </div>
                     </div>
                     <div class="text-dark small fw-semibold mb-2">
-                        Ticker: ${strategy.company ? strategy.company.ticker : 'N/A'} | ${strategy.direction || '-'}
+                        Ticker: ${strategy.company ? strategy.company.ticker : 'N/A'} | ${strategy.position || '-'}
                     </div>
                     <div class="leg-details">
                         <ul class="mb-0 ps-3">${legsHtml}</ul>
@@ -668,6 +681,29 @@
             `;
             container.appendChild(item);
         });
+    }
+
+    async function closeStrategyAction(strategyId, event) {
+        event.stopPropagation();
+
+        if (!confirm('Are you sure you want to close this strategy?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/status/close/${strategyId}`, {
+                method: 'PATCH',
+                headers: authHeaders
+            });
+
+            if (res.ok) {
+                loadPortfolio();
+            } else {
+                alert('Failed to close strategy.');
+            }
+        } catch (e) {
+            console.error("Error closing strategy", e);
+        }
     }
 
     async function viewStrategyChart(strategyId) {
@@ -702,8 +738,6 @@
 
         if (Array.isArray(pointsData)) {
             mappedData = pointsData.map(p => {
-                // 'price' / 'profit' are the real ChartPoint field names.
-                // Extra fallbacks kept only as a defensive net for future DTO changes.
                 const xVal = p.price ?? p.pricePoint ?? p.stockPrice ?? p.underlyingPrice ?? p.x;
                 const yVal = p.profit ?? p.pnl ?? p.pnL ?? p.payoff ?? p.value ?? p.netProfit ?? p.amount ?? p.y;
 

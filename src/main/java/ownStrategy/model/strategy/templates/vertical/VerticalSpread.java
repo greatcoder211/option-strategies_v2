@@ -17,11 +17,11 @@ public class VerticalSpread extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     private final VerticalStructure verticalStructure = new VerticalStructure();
-    private final double spreadValue;
+    private final double spreadSize;
 
-    public VerticalSpread(int quantity, Belfort position, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
+    public VerticalSpread(int quantity, Belfort position, OptionType optionType, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);
-        this.spreadValue = spreadValue;
+        this.spreadSize = spreadSize;
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.optionType = optionType;
         if (position.equals(Belfort.BUY) && optionType.equals(OptionType.CALL)) {
@@ -42,7 +42,7 @@ public class VerticalSpread extends NamedStrategy implements CallPutStrategy {
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadValue));
+        List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadSize));
         if (this.position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
@@ -56,7 +56,7 @@ public class VerticalSpread extends NamedStrategy implements CallPutStrategy {
     @Override
     public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
-        if(spreadValue <= 0 || spreadValue > spotPrice){
+        if(spreadSize <= 0 || spreadSize > spotPrice){
             throw new SpreadException("Wrong spread value. Try again.");
         }
         //expiryDate musi być za tradeDate

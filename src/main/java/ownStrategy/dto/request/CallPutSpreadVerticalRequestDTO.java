@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper=true)
 public abstract class CallPutSpreadVerticalRequestDTO extends CallPutSpreadRequestDTO {
     OptionType optionType;
-    double spreadValue;
+    double spreadSize;
     LocalDate tradeDate;
     LocalDate expiryDate;
 }

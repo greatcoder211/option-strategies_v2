@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//PMCC/Leveraged Covered Call/Diagonal Call Spread/Fig Leaf Spread/Vertical Spread(what? no..)
 public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;

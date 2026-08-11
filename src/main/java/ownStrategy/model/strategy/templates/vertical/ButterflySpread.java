@@ -22,12 +22,12 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
     @NotNull
     //zakładam, że nie można zagrać zerowego spreadu, czyli de facto cztery opcje po tym samym strike'u
     @Positive
-    private final double spreadValue;
+    private final double spreadSize;
 
-    public ButterflySpread(int quantity, Belfort position, String infoLink, OptionType optionType, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
+    public ButterflySpread(int quantity, Belfort position, String infoLink, OptionType optionType, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);
         //najpierw to, bo to będziemy walidować
-        this.spreadValue = spreadValue;
+        this.spreadSize = spreadSize;
         //walidacja
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.optionType = optionType;
@@ -44,7 +44,7 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
     @Override
     public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
-        if(spreadValue <= 0 || spreadValue > spotPrice){
+        if(spreadSize <= 0 || spreadSize > spotPrice){
             throw new SpreadException("Wrong spread value. Try again.");
         }
         //expiryDate musi być za tradeDate
@@ -54,18 +54,18 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
         //anything else?
     }
 
-    public List<Double> setPrices(double spotPrice, double spreadValue) {
+    public List<Double> setPrices(double spotPrice, double spreadSize) {
         List<Double> prices = new ArrayList<>();
-        prices.add(spotPrice - spreadValue);
+        prices.add(spotPrice - spreadSize);
         prices.add(spotPrice);
         prices.add(spotPrice);
-        prices.add(spotPrice + spreadValue);
+        prices.add(spotPrice + spreadSize);
         return prices;
     }
 
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = setPrices(spotPrice, spreadValue);
+        List<Double> prices = setPrices(spotPrice, spreadSize);
         if (position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(0),  expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

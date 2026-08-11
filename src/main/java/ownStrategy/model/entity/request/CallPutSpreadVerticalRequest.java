@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper=true)
 public abstract class CallPutSpreadVerticalRequest extends CallPutSpreadRequest {
     OptionType optionType;
-    double spreadValue;
+    double spreadSize;
     LocalDate tradeDate;
     LocalDate expiryDate;
 }

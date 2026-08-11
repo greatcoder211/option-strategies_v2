@@ -21,7 +21,7 @@ public class RatioSpreadFactory implements StrategyFactory<RatioSpreadRequest> {
                 request.getQuantity(),
                 request.getPosition(),
                 request.getOptionType(),
-                request.getSpreadValue(),
+                request.getSpreadSize(),
                 spotPrice,
                 request.getTradeDate(),
                 request.getExpiryDate()

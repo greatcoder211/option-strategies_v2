@@ -7,7 +7,7 @@ import java.time.LocalDate;
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
 public abstract class NeutralSpreadVerticalRequestDTO extends RequestDTO {
-    double spreadValue;
+    double spreadSize;
     LocalDate tradeDate;
     LocalDate expiryDate;
 }

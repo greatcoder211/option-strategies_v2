@@ -19,7 +19,7 @@ public class ButterflySpreadFactory implements StrategyFactory <ButterflySpreadR
                 request.getPosition(),
                 "https://www.tastylive.com/concepts-strategies/long-butterfly-spread",
                 request.getOptionType(),
-                request.getSpreadValue(),
+                request.getSpreadSize(),
                 request.getTradeDate(),
                 request.getExpiryDate(),
                 spotPrice

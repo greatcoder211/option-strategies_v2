@@ -19,7 +19,7 @@ public class IronButterflyFactory implements StrategyFactory<IronButterflyReques
         return new IronButterfly(
                 request.getQuantity(),
                 request.getPosition(),
-                request.getSpreadValue(),
+                request.getSpreadSize(),
                 request.getTradeDate(),
                 request.getExpiryDate(),
                 spotPrice

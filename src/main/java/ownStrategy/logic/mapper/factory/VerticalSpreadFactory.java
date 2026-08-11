@@ -20,7 +20,7 @@ public class VerticalSpreadFactory implements StrategyFactory <VerticalSpreadReq
                 request.getQuantity(),
                 request.getPosition(),
                 request.getOptionType(),
-                request.getSpreadValue(),
+                request.getSpreadSize(),
                 request.getTradeDate(),
                 request.getExpiryDate(),
                 spotPrice

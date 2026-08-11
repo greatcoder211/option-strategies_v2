@@ -18,12 +18,15 @@ import ownStrategy.service.strategy.StrategyBuilderService;
 import ownStrategy.service.strategy.StrategyFilterService;
 import ownStrategy.service.strategy.StrategyService;
 
+import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 //dotyczy jednej strategii lub całego portfolio składającego się z wielu strategii
 @RestController
 @CrossOrigin(origins = "*")
 public class StrategyController {
+
     private final StrategyService strategyService;
     private final StrategyBuilderService strategyBuilderService;
     private final StrategyFilterService strategyFilterService;
@@ -50,8 +53,11 @@ public class StrategyController {
     //tutaj przykład: dto -> oryginalna encja -> przekazujemy dalej -> dto na powrót
     @PostMapping("/execute")
     @ResponseStatus(HttpStatus.CREATED)
-    public PortfolioStrategyDTO executeStrategy(@RequestBody RequestDTO requestDto){
-        return strategyMapper.toDto(strategyBuilderService.createStrategy(strategyMapper.toEntity(requestDto)));
+    public PortfolioStrategyDTO executeStrategy(@RequestBody RequestDTO requestDTO, Principal principal) {
+        PortfolioStrategy strategyToSave = strategyBuilderService.createStrategy(strategyMapper.toEntity(requestDTO));
+        strategyToSave.setUserId(principal.getName());
+        strategyToSave.setCreatedAt(LocalDate.now());
+        return strategyMapper.toDto(strategyService.saveStrategyForUser(strategyToSave, principal.getName()));
     }
 
     @GetMapping("/companies/{keySearch}")
@@ -63,8 +69,8 @@ public class StrategyController {
     @PostMapping("/preview")
     public EntityModel<StrategyContracts.PreviewChartResponse> previewStrategy(@RequestBody RequestDTO requestDto){
         //argument obronny ze jest tu trochę logiki- nie da rady inaczej przez limity API, a ceny jest tkanką wspolną tego, co jest wymagane w serwisie i w assemblerze(controller to spaja)
-//        double spotPrice = strategyBuilderService.getSpotPrice(requestDto.getSelectedCompany().ticker());
-        double spotPrice = 220.0;
+        double spotPrice = strategyBuilderService.getSpotPrice(requestDto.getSelectedCompany().ticker());
+        //double spotPrice = 220.0;
         EntityModel<OptionStrategy> modelAssembler = optionStrategyModelAssembler.toModel(strategyBuilderService.mapRequestToOptionStrategy(strategyMapper.toEntity(requestDto), spotPrice));
         return EntityModel.of(new StrategyContracts.PreviewChartResponse(requestDto.getStrategyName(), strategyBuilderService.processPreviewChart(strategyMapper.toEntity(requestDto), spotPrice)), modelAssembler.getLinks());
     }
@@ -112,5 +118,11 @@ public class StrategyController {
     public ResponseEntity<Void> alphavantageLimitExceededCheck(String companyTicker) {
         strategyBuilderService.getSpotPrice(companyTicker);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/status/close/{portfolioStrategyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void closeStrategy(@PathVariable String portfolioStrategyId){
+        strategyService.closeStrategy(portfolioStrategyId);
     }
 }

@@ -2,15 +2,19 @@
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
+### 1. Retrieve and set JWT token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
 {
   "username": "Wuaschii",
   "password": "WebDev422##%%"
 }
 
 > {%
-    client.global.set("jwtToken", "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJXdWFzY2hpaSIsImlhdCI6MTc4NDU1Mjg2MCwiZXhwIjoxNzg0NjM5MjYwfQ.Uj8yxqfvwkp5BjnNFu9e9aL7y7eFUlkK2N3dDU2EZq1R-6ibWUBXVr40xCdgTVJEsxS0t8b8FBjLejeZ_jruWQ");
+    client.global.set("jwtToken", response.body.token);
+    client.log("New jwt token: " + client.global.get("jwtToken"));
 %}
-
 ### 2. Valid company search request
 GET http://localhost:8080/companies/microsoft
 Authorization: Bearer {{jwtToken}}
@@ -25,7 +29,7 @@ Content-Type: application/json
   "position": "BUY",
   "strategyName": "MSFT Test Vertical",
   "optionType": "CALL",
-  "spreadValue": 10.0,
+  "spreadSize": 10.0,
   "expiryDate": "2026-08-20",
   "selectedCompany": {
     "ticker": "MSFT",

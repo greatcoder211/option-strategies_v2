@@ -15,11 +15,11 @@ import java.util.List;
 public class Strangle extends NamedStrategy {
     private final String strategyName;
     private final VerticalStructure verticalStructure = new VerticalStructure();
-    private final double spreadValue;
+    private final double spreadSize;
 
-    public Strangle(int quantity, Belfort position, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
+    public Strangle(int quantity, Belfort position, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         super(quantity, position);
-        this.spreadValue = spreadValue;
+        this.spreadSize = spreadSize;
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.strategyName = this.position.equals(Belfort.BUY) ? "Long Strangle" : "Short Strangle";
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
@@ -28,7 +28,7 @@ public class Strangle extends NamedStrategy {
     @Override
     public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
-        if(spreadValue <= 0 || spreadValue > spotPrice){
+        if(spreadSize <= 0 || spreadSize > spotPrice){
             throw new SpreadException("Wrong spread value. Try again.");
         }
         //expiryDate musi być za tradeDate
@@ -40,7 +40,7 @@ public class Strangle extends NamedStrategy {
 
     @Override
     public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates){
-        List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadValue));
+        List<Double> prices = verticalStructure.setPrices(spotPrice, List.of(spreadSize));
         List <OptionLeg> legs = new ArrayList<>();
         if(this.position.equals(Belfort.BUY)){
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));

@@ -20,7 +20,7 @@ public class StrangleFactory implements StrategyFactory<StrangleRequest> {
         return new Strangle(
                 request.getQuantity(),
                 request.getPosition(),
-                request.getSpreadValue(),
+                request.getSpreadSize(),
                 request.getTradeDate(),
                 request.getExpiryDate(),
                 spotPrice

@@ -11,7 +11,7 @@ import java.util.List;
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
 public abstract class MultiSpreadVerticalRequestDTO extends RequestDTO {
-    List<Double> spreadValues;
+    List<Double> spreadSizes;
     LocalDate tradeDate;
     LocalDate expiryDate;
 }

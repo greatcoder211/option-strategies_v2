@@ -22,12 +22,11 @@ resilience4j:
         timeoutDuration: 500ms
 integration:
   alphavantage:
-    api:
-      key: ${ALPHAVANTAGE_API_KEY}
+    api-key: ${ALPHAVANTAGE_API_KEY}
+    connect-time-out: 10s
   finnhub:
-    api:
-      token: ${FINNHUB_API_TOKEN}
-
+    api-token: ${FINNHUB_API_TOKEN}
+    connect-time-out: 12s
 
 spring:
   data:

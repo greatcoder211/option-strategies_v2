@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @ToString(callSuper=true)
 @EqualsAndHashCode(callSuper=true)
 public abstract class NeutralSpreadVerticalRequest extends Request {
-    double spreadValue;
+    double spreadSize;
     LocalDate tradeDate;
     LocalDate expiryDate;
 }

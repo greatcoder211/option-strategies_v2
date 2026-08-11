@@ -12,28 +12,28 @@ import java.util.List;
 public class IronButterfly extends NamedStrategy {
     private final String strategyName;
     private final VerticalStructure verticalStructure = new VerticalStructure();
-    private final double spreadValue;
-    public IronButterfly(int quantity, Belfort position, double spreadValue, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
+    private final double spreadSize;
+    public IronButterfly(int quantity, Belfort position, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         super(quantity, position);
-        this.spreadValue = spreadValue;
+        this.spreadSize = spreadSize;
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.strategyName = position.equals(Belfort.BUY) ? "Reverse Iron Butterfly" : "Iron Butterfly";
         this.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<Double> setPrices(double spotPrice, double spreadValue) {
+    public List<Double> setPrices(double spotPrice, double spreadSize) {
         List<Double> prices = new ArrayList<>();
-        prices.add(spotPrice - spreadValue);
+        prices.add(spotPrice - spreadSize);
         prices.add(spotPrice);
         prices.add(spotPrice);
-        prices.add(spotPrice + spreadValue);
+        prices.add(spotPrice + spreadSize);
         return prices;
     }
 
     @Override
     public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         //spread musi byc z przedzialu (0, spotPrice), expiryDate musi być za tradeDate
-        if(spreadValue <= 0 || spreadValue > spotPrice){
+        if(spreadSize <= 0 || spreadSize > spotPrice){
             throw new SpreadException("Wrong spread value. Try again.");
         }
         //expiryDate musi być za tradeDate
@@ -46,7 +46,7 @@ public class IronButterfly extends NamedStrategy {
     @Override
     public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates,  List<LocalDate> expiryDates){
         List <OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = this.setPrices(spotPrice, spreadValue);
+        List<Double> prices = this.setPrices(spotPrice, spreadSize);
         if(position.equals(Belfort.BUY)){
             legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

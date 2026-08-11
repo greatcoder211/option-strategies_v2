@@ -1,6 +1,10 @@
 package ownStrategy.controller.strategy;
 
+import ownStrategy.dto.request.RequestDTO;
 import ownStrategy.model.entity.portfolio.ChartPoint;
+import ownStrategy.model.entity.request.Request;
+
+import java.security.Principal;
 import java.util.List;
 
 public class StrategyContracts {

@@ -3,8 +3,8 @@ package ownStrategy.integration.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ownStrategy.config.FinnhubProperties;
 import ownStrategy.exception.APILimitExceededException;
 import ownStrategy.exception.InvalidAPITokenException;
 import ownStrategy.exception.KeyWordException;
@@ -20,21 +20,20 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class FinnhubClient implements PriceClient, CompanySearchClient {
 
-    private final String api_token;
+    private final FinnhubProperties properties;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public FinnhubClient(@Value("${integration.finnhub.api.token}") String api_token, ObjectMapper objectMapper) {
-        this.api_token = api_token;
+    public FinnhubClient(FinnhubProperties properties, ObjectMapper objectMapper) {
+        this.properties = properties;
         this.httpClient = HttpClient.newBuilder()
-                                    .connectTimeout(Duration.ofSeconds(10))
+                                    .connectTimeout(properties.connectTimeOut())
                                     .build();
         this.objectMapper = objectMapper;
     }
@@ -68,7 +67,7 @@ public class FinnhubClient implements PriceClient, CompanySearchClient {
     @Override
     @RateLimiter(name = "finnHubLimit")
     public double getStockPrice(String symbol){
-        String url = String.format("https://www.finnhub.io/api/v1/quote?symbol=%s&token=%s", symbol, api_token);
+        String url = String.format("https://www.finnhub.io/api/v1/quote?symbol=%s&token=%s", symbol, properties.apiToken());
         ClientContracts.ApiConnectionResponse apiResponse = connectWithApi(url);
         if (apiResponse.rootNode().path("c").asText().equals("0")) {
             System.err.println("RESPONSE: " + apiResponse.jsonResponse());
@@ -82,7 +81,7 @@ public class FinnhubClient implements PriceClient, CompanySearchClient {
     @RateLimiter(name = "finnHubLimit")
     public List<Company> getCompanies(String keySearch){
         String encodedKeywords = URLEncoder.encode(keySearch, StandardCharsets.UTF_8);
-        String url = String.format("https://www.finnhub.io/api/v1/search?q=%s&token=%s", encodedKeywords, api_token);
+        String url = String.format("https://www.finnhub.io/api/v1/search?q=%s&token=%s", encodedKeywords, properties.apiToken());
         ClientContracts.ApiConnectionResponse apiResponse = connectWithApi(url);
         JsonNode resultCompanies = apiResponse.rootNode().path("result");
         if (resultCompanies.isEmpty() || !resultCompanies.isArray()) {

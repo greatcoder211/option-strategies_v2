@@ -12,12 +12,12 @@ import java.util.List;
 public class IronCondor extends NamedStrategy {
     private final String name;
     private final VerticalStructure verticalStructure = new VerticalStructure();
-    private final List<Double> spreadValues;
+    private final List<Double> spreadSizes;
 
     //although we need only one searchDate, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
-    public IronCondor(int quantity, Belfort position, List<Double> spreadValues, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
+    public IronCondor(int quantity, Belfort position, List<Double> spreadSizes, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);
-        this.spreadValues = spreadValues;
+        this.spreadSizes = spreadSizes;
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.name = position.equals(Belfort.BUY) ? "Reverse Iron Butterfly" : "Iron Butterfly";
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
@@ -26,9 +26,9 @@ public class IronCondor extends NamedStrategy {
     @Override
     public void validateData(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         //user enters it as: index = (0: lower: 1 higher), so we validate higher as normal spread, lower just has to be lower
-        if (spreadValues.get(1) <= 0 || spreadValues.get(1) > spotPrice) {
+        if (spreadSizes.get(1) <= 0 || spreadSizes.get(1) > spotPrice) {
             throw new SpreadException("Wrong spread value. Try again.");
-        } else if (spreadValues.get(0) > spreadValues.get(1)) {
+        } else if (spreadSizes.get(0) > spreadSizes.get(1)) {
             throw new SpreadException("Wrong spread value. Lower spread has to be lower.");
         }
 
@@ -42,7 +42,7 @@ public class IronCondor extends NamedStrategy {
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = verticalStructure.setPrices(spotPrice, spreadValues);
+        List<Double> prices = verticalStructure.setPrices(spotPrice, spreadSizes);
         if (position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));
