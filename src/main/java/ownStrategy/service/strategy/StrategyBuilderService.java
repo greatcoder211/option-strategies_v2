@@ -2,7 +2,9 @@ package ownStrategy.service.strategy;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ownStrategy.config.DefaultPricingContext;
 import ownStrategy.logic.network.CompanySearch;
+import ownStrategy.model.PricingContext;
 import ownStrategy.model.entity.portfolio.ChartPoint;
 import ownStrategy.model.entity.portfolio.Company;
 import ownStrategy.exception.APILimitExceededException;
@@ -19,6 +21,7 @@ import ownStrategy.model.strategy.OptionStrategy;
 import ownStrategy.repository.StrategyRepository;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 //Strategy Builder Service- two major methods are 'processPreviewChart' and 'createStrategy', everything pertains to the initial process of strategy generation
@@ -30,13 +33,15 @@ public class StrategyBuilderService {
     private final ChartGenerator chartGenerator;
     private final PriceClient priceClient;
     private final CompanySearch companySearch;
+    private final DefaultPricingContext defaultPricingContext;
 
-    public StrategyBuilderService(StrategyRepository strategyRepository, StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, @Qualifier("finnhubClient") PriceClient priceClient, CompanySearch companySearch) {
+    public StrategyBuilderService(StrategyRepository strategyRepository, StrategyFactoryRegistry strategyFactoryRegistry, ChartGenerator chartGenerator, @Qualifier("finnhubClient") PriceClient priceClient, CompanySearch companySearch, DefaultPricingContext defaultPricingContext) {
         this.strategyRepository = strategyRepository;
         this.strategyFactoryRegistry = strategyFactoryRegistry;
         this.chartGenerator = chartGenerator;
         this.priceClient = priceClient;
         this.companySearch = companySearch;
+        this.defaultPricingContext = defaultPricingContext;
     }
 
     public List<Company> generateListOfCompanies(String keySearch) {
@@ -45,7 +50,8 @@ public class StrategyBuilderService {
 
     public List<ChartPoint> processPreviewChart(Request request, double spotPrice) {
        OptionStrategy domainStrategy = mapRequestToOptionStrategy(request, spotPrice);
-       return chartGenerator.draw(spotPrice, domainStrategy.getOptionLegs());
+       LocalDate evaluationDate = domainStrategy.getOptionLegs().stream().min(Comparator.comparing(OptionLeg::expiryDate)).get().expiryDate();
+       return chartGenerator.draw(spotPrice, domainStrategy.getOptionLegs(), new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility(), evaluationDate));
     }
 
     public double getSpotPrice(String ticker){

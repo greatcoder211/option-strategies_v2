@@ -18,6 +18,7 @@ import ownStrategy.repository.StrategyRepository;
 import ownStrategy.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,19 +40,23 @@ public class StrategyService {
         this.defaultPricingContext = defaultPricingContext;
     }
 
+    public LocalDate getEvaluationDate(List<OptionLeg> optionLegs){
+        return optionLegs.stream().min(Comparator.comparing(OptionLeg::expiryDate)).get().expiryDate();
+    }
+
     //-- BIG THINGS OUGHT TO HAPPEN --
     public double calculatePnL(List<OptionLeg> optionLegs, double entrySpotPrice, String ticker) {
         double simulatedSpotPrice = priceClient.getStockPrice(ticker);
-        return StrategyCalculator.calculatePnL(optionLegs, entrySpotPrice, simulatedSpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+        return StrategyCalculator.calculatePnL(optionLegs, entrySpotPrice, simulatedSpotPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility(), getEvaluationDate(optionLegs)));
     }
 
     public List<ChartPoint> makeChart(List<OptionLeg> optionLegs, Double spotPrice) {
-        return chartGenerator.draw(spotPrice, optionLegs);
+        return chartGenerator.draw(spotPrice, optionLegs, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility(), getEvaluationDate(optionLegs)));
     }
 
     public ChartPoint makeCurrentPriceMarker(List<OptionLeg> optionLegs, double entryPrice, String ticker) {
         double currentPrice = priceClient.getStockPrice(ticker);
-        double currentProfit = StrategyCalculator.calculatePnL(optionLegs, entryPrice, currentPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()));
+        double currentProfit = StrategyCalculator.calculatePnL(optionLegs, entryPrice, currentPrice, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility(), getEvaluationDate(optionLegs)));
         return new ChartPoint(currentPrice, currentProfit);
     }
 

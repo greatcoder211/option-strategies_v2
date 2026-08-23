@@ -11,18 +11,14 @@ import java.util.List;
 
 @Component
 public class ChartGenerator {
-    private final DefaultPricingContext defaultPricingContext;
-    public ChartGenerator(DefaultPricingContext defaultPricingContext) {
-        this.defaultPricingContext = defaultPricingContext;
-    }
-    public List<ChartPoint> draw(double spotPrice, List<OptionLeg> optionLegs) {
+    public List<ChartPoint> draw(double spotPrice, List<OptionLeg> optionLegs, PricingContext pricingContext) {
         List <ChartPoint> chartPoints = new ArrayList<>();
         double bottom = 0.8 * optionLegs.get(0).strikePrice();
         double top = 1.2 * optionLegs.get(optionLegs.size() - 1).strikePrice();
         double totalRange = top - bottom;
         for(int i = 0; i < 100; i++){
             double pricePoint = bottom + totalRange * i / 100;
-            chartPoints.add(new ChartPoint(pricePoint, StrategyCalculator.calculatePnL(optionLegs, spotPrice, pricePoint, new PricingContext(defaultPricingContext.getRiskFreeRate(), defaultPricingContext.getVolatility()))));
+            chartPoints.add(new ChartPoint(pricePoint, StrategyCalculator.calculatePnL(optionLegs, spotPrice, pricePoint, pricingContext)));
         }
         return chartPoints;
     }
