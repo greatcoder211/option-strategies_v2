@@ -16,6 +16,7 @@ public class Request {
     @NotNull
     private Belfort position;
     @NotBlank
+    private String strategyTypeName;
     private String strategyName;
     @NotBlank
     private Company selectedCompany;

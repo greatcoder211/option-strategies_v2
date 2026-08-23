@@ -13,7 +13,6 @@ import ownStrategy.model.Status;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Getter @Setter @NoArgsConstructor
 //@Document(collection = "bedzie-sanfrancisco")
@@ -30,6 +29,7 @@ public class PortfolioStrategy {
     private Belfort position;
     @Nullable
     private OptionType optionType;
+    private String strategyTypeName;
     private String strategyName;
     private Company company;
     //Double, by odpowiednio opakować to nullem w przypadku strategii "na później"
@@ -38,11 +38,12 @@ public class PortfolioStrategy {
     //OPEN, CLOSE, PENDING
     private Status status;
     @Builder
-    public PortfolioStrategy(int quantity, Belfort position, @Nullable OptionType optionType, String strategyName, Company company, Double spotPrice, List<OptionLeg> optionLegs, Status status) {
+    public PortfolioStrategy(int quantity, Belfort position, @Nullable OptionType optionType, String strategyTypeName, String strategyName, Company company, Double spotPrice, List<OptionLeg> optionLegs, Status status) {
         this.createdAt = LocalDate.now();
         this.quantity = quantity;
         this.position = position;
         this.optionType = optionType;
+        this.strategyTypeName = strategyTypeName;
         this.strategyName = strategyName;
         this.company = company;
         this.spotPrice = spotPrice;

@@ -69,10 +69,10 @@ public class StrategyBuilderService {
     public PortfolioStrategy createStrategy(Request request) {
         double spotPrice = getSpotPrice(request.getSelectedCompany().ticker());
         OptionStrategy domainStrategy = mapRequestToOptionStrategy(request, spotPrice);
-        return mapToPortfolio(domainStrategy, spotPrice, request.getSelectedCompany());
+        return mapToPortfolio(domainStrategy, request.getStrategyName(), spotPrice, request.getSelectedCompany());
     }
 
-    public PortfolioStrategy mapToPortfolio(OptionStrategy domainStrategy, double spotPrice, Company company) {
+    public PortfolioStrategy mapToPortfolio(OptionStrategy domainStrategy, String strategyName, double spotPrice, Company company) {
         OptionType optionType = null;
         if (domainStrategy instanceof CallPutStrategy) {
             optionType = ((CallPutStrategy) domainStrategy).getOptionType();
@@ -88,7 +88,8 @@ public class StrategyBuilderService {
                 .quantity(domainStrategy.getQuantity())
                 .position(domainStrategy.getPosition())
                 .optionType(optionType)
-                .strategyName(domainStrategy.getStrategyName())
+                .strategyTypeName(domainStrategy.getStrategyName())
+                .strategyName(strategyName)
                 .company(company)
                 .spotPrice(spotPrice)
                 .optionLegs(domainStrategy.getOptionLegs())

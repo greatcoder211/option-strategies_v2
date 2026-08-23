@@ -129,6 +129,14 @@ public class StrategyService {
         //jeżeli id jest takie, jak id już którejś strategii w bazie- robi patcha. Else- zapisuje nowy obiekt(logiczny)
         strategyRepository.save(portfolioStrategy);
     }
+
+    public void renameStrategy(String portfolioStrategyId, String nameForStrategy) {
+        Optional<PortfolioStrategy> portfolioStrategy = strategyRepository.findById(portfolioStrategyId);
+        portfolioStrategy.ifPresent(strategy -> {
+            strategy.setStrategyName(nameForStrategy);
+            strategyRepository.save(strategy);
+            });
+    }
 }
 
 /*  ---do naklepania---

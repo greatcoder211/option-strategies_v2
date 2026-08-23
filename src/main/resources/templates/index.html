@@ -192,7 +192,7 @@
         ],
         "Calendar Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
-            { name: "strikePrice", label: "Strike Price", type: "number", step: "0.01" }
+            { name: "strikePrice", label: "Strike Price ($)", type: "number", step: "0.01" }
         ],
         "Iron Butterfly": [
             { name: "spreadSize", label: "Spread Size ($)", type: "number", step: "0.01" }
@@ -203,8 +203,8 @@
         ],
         "Poor Mans Covered": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
-            { name: "strikePrice1", label: "Short Strike", type: "number", step: "0.01" },
-            { name: "strikePrice2", label: "Long Strike", type: "number", step: "0.01" }
+            { name: "strikePrice2", label: "Long Strike ($)", type: "number", step: "0.01" },
+            { name: "strikePrice1", label: "Short Strike ($)", type: "number", step: "0.01" }
         ],
         "Ratio Spread": [
             { name: "optionType", label: "Option Type", type: "select", options: ["CALL", "PUT"] },
@@ -500,6 +500,8 @@
         const spreadSizesList = [];
         const strikePricesList = [];
 
+        let spread1, spread2, strike1, strike2;
+
         dynamicInputs.forEach(input => {
             const key = input.getAttribute('data-key');
             let val = input.value;
@@ -508,14 +510,24 @@
                 val = parseFloat(val);
             }
 
-            if (key === 'spreadSize1' || key === 'spreadSize2') {
-                if (!isNaN(val)) spreadSizesList.push(val);
-            } else if (key === 'strikePrice1' || key === 'strikePrice2') {
-                if (!isNaN(val)) strikePricesList.push(val);
+            // Zachowujemy oryginalną kolejność w liście na podstawie konkretnego klucza
+            if (key === 'spreadSize1') {
+                spread1 = val;
+            } else if (key === 'spreadSize2') {
+                spread2 = val;
+            } else if (key === 'strikePrice1') {
+                strike1 = val;
+            } else if (key === 'strikePrice2') {
+                strike2 = val;
             } else {
                 payload[key] = val;
             }
         });
+
+        if (spread1 !== undefined && !isNaN(spread1)) spreadSizesList.push(spread1);
+        if (spread2 !== undefined && !isNaN(spread2)) spreadSizesList.push(spread2);
+        if (strike1 !== undefined && !isNaN(strike1)) strikePricesList.push(strike1);
+        if (strike2 !== undefined && !isNaN(strike2)) strikePricesList.push(strike2);
 
         if (spreadSizesList.length > 0) payload['spreadSizes'] = spreadSizesList;
         if (strikePricesList.length > 0) payload['strikePrices'] = strikePricesList;
@@ -632,6 +644,31 @@
         }
     }
 
+    // ZMODYFIKOWANO: Dostosowano URL endpointu i nazwę parametru do sygnatury w StrategyController
+    async function renameStrategyAction(strategyId, event) {
+        event.stopPropagation();
+
+        const newName = prompt('Enter new strategy name:');
+        if (newName && newName.trim() !== '') {
+            try {
+                // Było: /portfolio/rename/... Zmieniono na: /strategy/rename/... zgodnie z @PatchMapping w kontrolerze
+                // Było: ?name=... Zmieniono na ?nameForStrategy=... zgodnie z nazwą argumentu metody
+                const res = await fetch(`${API_BASE}/strategy/rename/${strategyId}?nameForStrategy=${encodeURIComponent(newName)}`, {
+                    method: 'PATCH',
+                    headers: authHeaders
+                });
+
+                if (res.ok) {
+                    loadPortfolio();
+                } else {
+                    alert('Failed to rename strategy.');
+                }
+            } catch (e) {
+                console.error("Error renaming strategy", e);
+            }
+        }
+    }
+
     function renderPortfolio(strategies) {
         const container = document.getElementById('portfolio-list');
         container.innerHTML = "";
@@ -643,7 +680,7 @@
 
         strategies.forEach(strategy => {
             let legsHtml = strategy.optionLegs ? strategy.optionLegs.map(leg =>
-                `<li>${leg.position} ${leg.type || leg.optionType} @ Strike: ${leg.strikePrice} (Exp: ${leg.expiryDate || leg.expirationDate})</li>`
+                `<li>${leg.position} ${leg.type || leg.optionType} @${leg.strikePrice} (Exp: ${leg.expiryDate || leg.expirationDate})</li>`
             ).join('') : 'No legs data';
 
             const item = document.createElement('div');
@@ -651,13 +688,14 @@
 
             const strategyId = strategy.portfolioStrategyID || strategy.id;
 
-            // POPRAWIONE: poprawny warunek if-else dla kolorow
             let statusColor = 'secondary';
             if (strategy.status === 'OPEN') statusColor = 'success';
             else if (strategy.status === 'PENDING') statusColor = 'warning';
             else if (strategy.status === 'CLOSED') statusColor = 'danger';
 
-            // Renderowanie guzika Close tylko jesli strategia nie jest jeszcze zamknieta
+            // Przycisk Name oraz Renderowanie guzika Close
+            const renameButtonHtml = `<button class="btn btn-sm btn-outline-primary ms-2 py-0" style="font-size: 0.75rem;" onclick="renameStrategyAction('${strategyId}', event)">Name</button>`;
+
             const closeButtonHtml = (strategy.status !== 'CLOSED')
                 ? `<button class="btn btn-sm btn-outline-danger ms-2 py-0" style="font-size: 0.75rem;" onclick="closeStrategyAction('${strategyId}', event)">Close</button>`
                 : '';
@@ -665,9 +703,10 @@
             item.innerHTML = `
                 <div class="portfolio-item" onclick="viewStrategyChart('${strategyId}')">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-primary">${strategy.strategyName || 'Strategy'}</h6>
+                        <h6 class="fw-bold mb-0 text-primary">${strategy.strategyName || 'Portfolio Strategy: Null'}</h6>
                         <div>
                             <span class="badge bg-${statusColor}">${strategy.status || 'OPEN'}</span>
+                            ${renameButtonHtml}
                             ${closeButtonHtml}
                         </div>
                     </div>

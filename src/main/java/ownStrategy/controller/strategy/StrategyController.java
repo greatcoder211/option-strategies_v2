@@ -125,4 +125,10 @@ public class StrategyController {
     public void closeStrategy(@PathVariable String portfolioStrategyId){
         strategyService.closeStrategy(portfolioStrategyId);
     }
+
+    @PatchMapping("/strategy/rename/{portfolioStrategyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void renameStrategy(@PathVariable String portfolioStrategyId, String nameForStrategy){
+        strategyService.renameStrategy(portfolioStrategyId, nameForStrategy);
+    }
 }
