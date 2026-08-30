@@ -9,6 +9,7 @@ import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.structure.VerticalStructure;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
 public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
     @NotNull
     private final OptionType optionType;
+    private final VerticalStructure verticalStructure = new VerticalStructure();
     @NotNull
     //zakładam, że nie można zagrać zerowego spreadu, czyli de facto cztery opcje po tym samym strike'u
     @Positive

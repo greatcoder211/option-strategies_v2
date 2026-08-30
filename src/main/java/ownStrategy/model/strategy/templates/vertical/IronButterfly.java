@@ -5,11 +5,13 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.structure.VerticalStructure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 public class IronButterfly extends NamedStrategy {
     private final String strategyName;
+    private final VerticalStructure verticalStructure = new VerticalStructure();
     private final double spreadSize;
     public IronButterfly(int quantity, Belfort position, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
         super(quantity, position);
