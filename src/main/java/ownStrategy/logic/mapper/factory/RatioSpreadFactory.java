@@ -1,11 +1,10 @@
 package ownStrategy.logic.mapper.factory;
 
 import org.springframework.stereotype.Component;
-import ownStrategy.dto.request.RatioSpreadRequestDTO;
 import ownStrategy.logic.mapper.StrategyFactory;
 import ownStrategy.model.entity.request.RatioSpreadRequest;
 import ownStrategy.model.strategy.OptionStrategy;
-import ownStrategy.model.strategy.templates.asymmetrical.RatioSpread;
+import ownStrategy.model.strategy.templates.vertical.RatioSpread;
 
 import java.time.LocalDate;
 
