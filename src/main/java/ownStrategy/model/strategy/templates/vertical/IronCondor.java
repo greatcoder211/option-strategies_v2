@@ -5,13 +5,11 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.NamedStrategy;
-import ownStrategy.model.structure.VerticalStructure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 public class IronCondor extends NamedStrategy {
     private final String name;
-    private final VerticalStructure verticalStructure = new VerticalStructure();
     private final List<Double> spreadSizes;
 
     //although we need only one searchDate, I make a sN-fold(spreadNumber) list of them so as to keep to the standard of having List of LocalDates which can vary depending on the strategy and its category
@@ -21,6 +19,15 @@ public class IronCondor extends NamedStrategy {
         validateData(spotPrice, List.of(tradeDate), List.of(expiryDate));
         this.name = position.equals(Belfort.BUY) ? "Reverse Iron Butterfly" : "Iron Butterfly";
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
+    }
+
+    public List<Double> setPrices(double spotPrice, List<Double> spreadSizes) {
+        List<Double> prices = new ArrayList<>();
+        prices.add(spotPrice - spreadSizes.get(1));
+        prices.add(spotPrice - spreadSizes.get(0));
+        prices.add(spotPrice + spreadSizes.get(0));
+        prices.add(spotPrice + spreadSizes.get(1));
+        return prices;
     }
 
     @Override
@@ -42,7 +49,7 @@ public class IronCondor extends NamedStrategy {
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = verticalStructure.setPrices(spotPrice, spreadSizes);
+        List<Double> prices = this.setPrices(spotPrice, spreadSizes);
         if (position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

@@ -6,7 +6,6 @@ import ownStrategy.model.Belfort;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
-import ownStrategy.model.structure.DiagonalStructure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +16,6 @@ public class PoorMansCovered extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     //long powyżej i short poniżej long takze pozniej, a short- krocej(od dzisiaj)
-    private final DiagonalStructure diagonalStructure = new DiagonalStructure();
     private final List<Double> strikePrices;
     private final LocalDate shortExpiryDate;
     private final LocalDate longExpiryDate;

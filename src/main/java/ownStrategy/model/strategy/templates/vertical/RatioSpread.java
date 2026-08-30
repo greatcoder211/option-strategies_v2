@@ -6,7 +6,6 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
-import ownStrategy.model.structure.VerticalStructure;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.List;
 public class RatioSpread extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
-    private final VerticalStructure verticalStructure = new VerticalStructure();
     private final double spreadSize;
 
     public RatioSpread(int quantity, Belfort position, OptionType optionType, double spreadSize, double spotPrice, LocalDate tradeDate, LocalDate expiryDate) {

@@ -7,7 +7,6 @@ import ownStrategy.model.Belfort;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
-import ownStrategy.model.structure.HorizontalStructure;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -18,7 +17,6 @@ public class CalendarSpread extends NamedStrategy implements CallPutStrategy {
     private final OptionType optionType;
     private final String strategyName;
     private final double strikePrice;
-    private final HorizontalStructure horizontalStructure = new HorizontalStructure();
     //z logiki musi wynikać, że tradeDate równe heute, ale trzeba przekazać mu i tak do konstruktora
     public CalendarSpread(int quantity, Belfort position, OptionType optionType, double strikePrice, LocalDate tradeDate, LocalDate shortExpiryDate, LocalDate longExpiryDate, double spotPrice) {
         super(quantity, position);
