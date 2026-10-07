@@ -9,12 +9,13 @@ import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
+public class ButterflySpread extends NamedStrategy implements CallPutStrategy, SpreadStrategy {
     @NotNull
     private final OptionType optionType;
     @NotNull
@@ -22,7 +23,7 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
     @Positive
     private final double spreadSize;
 
-    public ButterflySpread(int quantity, Belfort position, String infoLink, OptionType optionType, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
+    public ButterflySpread(int quantity, Belfort position,String infolink, OptionType optionType, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice) {
         super(quantity, position);
         //najpierw to, bo to będziemy walidować
         this.spreadSize = spreadSize;
@@ -52,7 +53,8 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
         //anything else?
     }
 
-    public List<Double> setPrices(double spotPrice, double spreadSize) {
+    @Override
+    public List<Double> setPrices(double spotPrice) {
         List<Double> prices = new ArrayList<>();
         prices.add(spotPrice - spreadSize);
         prices.add(spotPrice);
@@ -63,7 +65,7 @@ public class ButterflySpread extends NamedStrategy implements CallPutStrategy {
 
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = setPrices(spotPrice, spreadSize);
+        List<Double> prices = setPrices(spotPrice);
         if (position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.BUY, optionType, prices.get(0),  expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.SELL, optionType, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

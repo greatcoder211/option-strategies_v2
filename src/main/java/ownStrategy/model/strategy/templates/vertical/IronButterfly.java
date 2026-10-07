@@ -5,10 +5,12 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-public class IronButterfly extends NamedStrategy {
+public class IronButterfly extends NamedStrategy implements SpreadStrategy {
     private final String strategyName;
     private final double spreadSize;
     public IronButterfly(int quantity, Belfort position, double spreadSize, LocalDate tradeDate, LocalDate expiryDate, double spotPrice){
@@ -19,7 +21,8 @@ public class IronButterfly extends NamedStrategy {
         this.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<Double> setPrices(double spotPrice, double spreadSize) {
+    @Override
+    public List<Double> setPrices(double spotPrice) {
         List<Double> prices = new ArrayList<>();
         prices.add(spotPrice - spreadSize);
         prices.add(spotPrice);
@@ -44,7 +47,7 @@ public class IronButterfly extends NamedStrategy {
     @Override
     public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates,  List<LocalDate> expiryDates){
         List <OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = this.setPrices(spotPrice, spreadSize);
+        List<Double> prices = this.setPrices(spotPrice);
         if(position.equals(Belfort.BUY)){
             legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

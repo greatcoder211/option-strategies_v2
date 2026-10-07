@@ -7,6 +7,7 @@ import ownStrategy.model.Belfort;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -23,6 +24,7 @@ public class CalendarSpread extends NamedStrategy implements CallPutStrategy {
         this.strikePrice = strikePrice;
         validateData(spotPrice, List.of(tradeDate), List.of(shortExpiryDate, longExpiryDate));
         this.optionType = optionType;
+        //TODO: zrobić porządek z przyznawaniem nazwy w Calendar Spread
         if(ChronoUnit.DAYS.between(tradeDate, shortExpiryDate) == 7 && ChronoUnit.DAYS.between(tradeDate, longExpiryDate) == 14){
             this.strategyName = "Weekly ".concat(getStrategyNameSnippet()).concat("Calendar Spread");
         }

@@ -11,7 +11,6 @@ public abstract class NamedStrategy extends OptionStrategy {
     public NamedStrategy(int quantity, Belfort position){
         super(quantity, position);
     }
-
     public abstract List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates,  List<LocalDate> expiryDates);
     public abstract void validateData(double spotPrice, List<LocalDate> tradeDates,  List<LocalDate> expiryDates);
 }

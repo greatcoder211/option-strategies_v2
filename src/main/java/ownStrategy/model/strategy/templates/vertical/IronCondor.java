@@ -5,10 +5,12 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-public class IronCondor extends NamedStrategy {
+public class IronCondor extends NamedStrategy implements SpreadStrategy {
     private final String name;
     private final List<Double> spreadSizes;
 
@@ -21,7 +23,7 @@ public class IronCondor extends NamedStrategy {
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<Double> setPrices(double spotPrice, List<Double> spreadSizes) {
+    public List<Double> setPrices(double spotPrice) {
         List<Double> prices = new ArrayList<>();
         prices.add(spotPrice - spreadSizes.get(1));
         prices.add(spotPrice - spreadSizes.get(0));
@@ -49,7 +51,7 @@ public class IronCondor extends NamedStrategy {
     @Override
     public List<OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List<OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = this.setPrices(spotPrice, spreadSizes);
+        List<Double> prices = this.setPrices(spotPrice);
         if (position.equals(Belfort.BUY)) {
             legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(1), expiryDates.get(0), tradeDates.get(0)));

@@ -1,4 +1,4 @@
-package ownStrategy.config;
+package ownStrategy.config.clientProperties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

@@ -6,13 +6,14 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RatioSpread extends NamedStrategy implements CallPutStrategy {
+public class RatioSpread extends NamedStrategy implements CallPutStrategy, SpreadStrategy {
     private final OptionType optionType;
     private final String strategyName;
     private final double spreadSize;
@@ -40,7 +41,8 @@ public class RatioSpread extends NamedStrategy implements CallPutStrategy {
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<Double> setPrices(double spotPrice, double spreadSize) {
+    @Override
+    public List<Double> setPrices(double spotPrice) {
         List<Double> prices = new ArrayList<>();
         prices.add(spotPrice);
         prices.add(this.optionType.equals(OptionType.PUT) ? spotPrice - spreadSize : spotPrice + spreadSize);
@@ -52,7 +54,7 @@ public class RatioSpread extends NamedStrategy implements CallPutStrategy {
     @Override
     public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates) {
         List <OptionLeg> legs = new ArrayList<>();
-        List<Double> prices = this.setPrices(spotPrice, spreadSize);
+        List<Double> prices = this.setPrices(spotPrice);
         if(this.position.equals(Belfort.BUY)){
             if(this.optionType.equals(OptionType.PUT)){
                 legs.add(new OptionLeg(quantity, Belfort.SELL, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));

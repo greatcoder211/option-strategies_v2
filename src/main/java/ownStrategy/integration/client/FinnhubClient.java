@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.stereotype.Component;
-import ownStrategy.config.FinnhubProperties;
+import ownStrategy.config.clientProperties.FinnhubProperties;
 import ownStrategy.exception.APILimitExceededException;
 import ownStrategy.exception.InvalidAPITokenException;
 import ownStrategy.exception.KeyWordException;

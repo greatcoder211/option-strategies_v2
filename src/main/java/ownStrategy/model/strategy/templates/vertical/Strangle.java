@@ -6,12 +6,13 @@ import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.OptionType;
 import ownStrategy.model.Belfort;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Strangle extends NamedStrategy {
+public class Strangle extends NamedStrategy implements SpreadStrategy {
     private final String strategyName;
     private final double spreadSize;
 
@@ -23,10 +24,11 @@ public class Strangle extends NamedStrategy {
         super.optionLegs = generateLegs(spotPrice, List.of(tradeDate), List.of(expiryDate));
     }
 
-    public List<Double> setPrices(double spreadSize, List<Double> spreadSizes){
+    @Override
+    public List<Double> setPrices(double spotPrice){
         List<Double> prices = new ArrayList<>();
-        prices.add(spreadSize - spreadSizes.get(0));
-        prices.add(spreadSize + spreadSizes.get(0));
+        prices.add(spotPrice - spreadSize);
+        prices.add(spotPrice + spreadSize);
         return prices;
     }
 
@@ -45,7 +47,7 @@ public class Strangle extends NamedStrategy {
 
     @Override
     public List <OptionLeg> generateLegs(double spotPrice, List<LocalDate> tradeDates, List<LocalDate> expiryDates){
-        List<Double> prices = this.setPrices(spotPrice, List.of(spreadSize));
+        List<Double> prices = this.setPrices(spotPrice);
         List <OptionLeg> legs = new ArrayList<>();
         if(this.position.equals(Belfort.BUY)){
             legs.add(new OptionLeg(quantity, Belfort.BUY, OptionType.PUT, prices.get(0), expiryDates.get(0), tradeDates.get(0)));

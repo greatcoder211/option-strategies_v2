@@ -6,6 +6,8 @@ import ownStrategy.model.Belfort;
 import ownStrategy.model.entity.portfolio.OptionLeg;
 import ownStrategy.model.strategy.CallPutStrategy;
 import ownStrategy.model.strategy.NamedStrategy;
+import ownStrategy.model.strategy.SpreadStrategy;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
